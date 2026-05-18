@@ -11,60 +11,64 @@ import * as ffi from '@remirth/pcsc-sys';
 /* ------------------------------------------------------------------ */
 
 /** Context scope passed to {@link Context.establish}. */
-export enum Scope {
+export const Scope = {
   /** User context (most common). */
-  User = ffi.SCARD_SCOPE_USER,
+  User: ffi.SCARD_SCOPE_USER,
   /** Terminal context. */
-  Terminal = ffi.SCARD_SCOPE_TERMINAL,
+  Terminal: ffi.SCARD_SCOPE_TERMINAL,
   /** System context. */
-  System = ffi.SCARD_SCOPE_SYSTEM,
+  System: ffi.SCARD_SCOPE_SYSTEM,
   /** Global context. */
-  Global = ffi.SCARD_SCOPE_GLOBAL,
-}
+  Global: ffi.SCARD_SCOPE_GLOBAL,
+} as const;
+export type Scope = (typeof Scope)[keyof typeof Scope];
 
 /* ------------------------------------------------------------------ */
 /*  Share modes                                                       */
 /* ------------------------------------------------------------------ */
 
 /** How a reader connection is shared. */
-export enum ShareMode {
+export const ShareMode = {
   /** Exclusive connection — no other connections allowed. */
-  Exclusive = ffi.SCARD_SHARE_EXCLUSIVE,
+  Exclusive: ffi.SCARD_SHARE_EXCLUSIVE,
   /** Shared connection — other shared connections allowed. */
-  Shared = ffi.SCARD_SHARE_SHARED,
+  Shared: ffi.SCARD_SHARE_SHARED,
   /** Direct connection — no protocol negotiation. */
-  Direct = ffi.SCARD_SHARE_DIRECT,
-}
+  Direct: ffi.SCARD_SHARE_DIRECT,
+} as const;
+export type ShareMode = (typeof ShareMode)[keyof typeof ShareMode];
 
 /* ------------------------------------------------------------------ */
 /*  Disposition                                                       */
 /* ------------------------------------------------------------------ */
 
 /** Action to take when disconnecting from a card. */
-export enum Disposition {
+export const Disposition = {
   /** Leave the card as-is. */
-  LeaveCard = ffi.SCARD_LEAVE_CARD,
+  LeaveCard: ffi.SCARD_LEAVE_CARD,
   /** Reset the card. */
-  ResetCard = ffi.SCARD_RESET_CARD,
+  ResetCard: ffi.SCARD_RESET_CARD,
   /** Unpower the card. */
-  UnpowerCard = ffi.SCARD_UNPOWER_CARD,
+  UnpowerCard: ffi.SCARD_UNPOWER_CARD,
   /** Eject the card. */
-  EjectCard = ffi.SCARD_EJECT_CARD,
-}
+  EjectCard: ffi.SCARD_EJECT_CARD,
+} as const;
+export type Disposition = (typeof Disposition)[keyof typeof Disposition];
 
 /* ------------------------------------------------------------------ */
 /*  Protocol                                                          */
 /* ------------------------------------------------------------------ */
 
 /** A smart card communication protocol. */
-export enum Protocol {
+export const Protocol = {
   /** T=0 (byte-oriented) protocol. */
-  T0 = ffi.SCARD_PROTOCOL_T0,
+  T0: ffi.SCARD_PROTOCOL_T0,
   /** T=1 (block-oriented) protocol. */
-  T1 = ffi.SCARD_PROTOCOL_T1,
+  T1: ffi.SCARD_PROTOCOL_T1,
   /** Raw protocol (no TPDU layer). */
-  RAW = ffi.SCARD_PROTOCOL_RAW,
-}
+  RAW: ffi.SCARD_PROTOCOL_RAW,
+} as const;
+export type Protocol = (typeof Protocol)[keyof typeof Protocol];
 
 /* ------------------------------------------------------------------ */
 /*  Protocols (bitmask)                                               */
@@ -137,18 +141,19 @@ export type Status = number;
 /* ------------------------------------------------------------------ */
 
 /** Category of a reader or card attribute. */
-export enum AttributeClass {
-  VendorInfo = ffi.SCARD_CLASS_VENDOR_INFO,
-  Communications = ffi.SCARD_CLASS_COMMUNICATIONS,
-  Protocol = ffi.SCARD_CLASS_PROTOCOL,
-  PowerMgmt = ffi.SCARD_CLASS_POWER_MGMT,
-  Security = ffi.SCARD_CLASS_SECURITY,
-  Mechanical = ffi.SCARD_CLASS_MECHANICAL,
-  VendorDefined = ffi.SCARD_CLASS_VENDOR_DEFINED,
-  IfdProtocol = ffi.SCARD_CLASS_IFD_PROTOCOL,
-  IccState = ffi.SCARD_CLASS_ICC_STATE,
-  System = ffi.SCARD_CLASS_SYSTEM,
-}
+export const AttributeClass = {
+  VendorInfo: ffi.SCARD_CLASS_VENDOR_INFO,
+  Communications: ffi.SCARD_CLASS_COMMUNICATIONS,
+  Protocol: ffi.SCARD_CLASS_PROTOCOL,
+  PowerMgmt: ffi.SCARD_CLASS_POWER_MGMT,
+  Security: ffi.SCARD_CLASS_SECURITY,
+  Mechanical: ffi.SCARD_CLASS_MECHANICAL,
+  VendorDefined: ffi.SCARD_CLASS_VENDOR_DEFINED,
+  IfdProtocol: ffi.SCARD_CLASS_IFD_PROTOCOL,
+  IccState: ffi.SCARD_CLASS_ICC_STATE,
+  System: ffi.SCARD_CLASS_SYSTEM,
+} as const;
+export type AttributeClass = (typeof AttributeClass)[keyof typeof AttributeClass];
 
 /* ------------------------------------------------------------------ */
 /*  Attribute IDs                                                     */
@@ -159,57 +164,58 @@ export enum AttributeClass {
  *
  * Passed to {@link Card.getAttribute} / {@link Card.setAttribute}.
  */
-export enum Attribute {
-  VendorName = ffi.SCARD_ATTR_VENDOR_NAME,
-  VendorIfdType = ffi.SCARD_ATTR_VENDOR_IFD_TYPE,
-  VendorIfdVersion = ffi.SCARD_ATTR_VENDOR_IFD_VERSION,
-  VendorIfdSerialNo = ffi.SCARD_ATTR_VENDOR_IFD_SERIAL_NO,
-  ChannelId = ffi.SCARD_ATTR_CHANNEL_ID,
-  AsyncProtocolTypes = ffi.SCARD_ATTR_ASYNC_PROTOCOL_TYPES,
-  DefaultClk = ffi.SCARD_ATTR_DEFAULT_CLK,
-  MaxClk = ffi.SCARD_ATTR_MAX_CLK,
-  DefaultDataRate = ffi.SCARD_ATTR_DEFAULT_DATA_RATE,
-  MaxDataRate = ffi.SCARD_ATTR_MAX_DATA_RATE,
-  MaxIfsd = ffi.SCARD_ATTR_MAX_IFSD,
-  SyncProtocolTypes = ffi.SCARD_ATTR_SYNC_PROTOCOL_TYPES,
-  PowerMgmtSupport = ffi.SCARD_ATTR_POWER_MGMT_SUPPORT,
-  UserToCardAuthDevice = ffi.SCARD_ATTR_USER_TO_CARD_AUTH_DEVICE,
-  UserAuthInputDevice = ffi.SCARD_ATTR_USER_AUTH_INPUT_DEVICE,
-  Characteristics = ffi.SCARD_ATTR_CHARACTERISTICS,
-  CurrentProtocolType = ffi.SCARD_ATTR_CURRENT_PROTOCOL_TYPE,
-  CurrentClk = ffi.SCARD_ATTR_CURRENT_CLK,
-  CurrentF = ffi.SCARD_ATTR_CURRENT_F,
-  CurrentD = ffi.SCARD_ATTR_CURRENT_D,
-  CurrentN = ffi.SCARD_ATTR_CURRENT_N,
-  CurrentW = ffi.SCARD_ATTR_CURRENT_W,
-  CurrentIfsc = ffi.SCARD_ATTR_CURRENT_IFSC,
-  CurrentIfsd = ffi.SCARD_ATTR_CURRENT_IFSD,
-  CurrentBwt = ffi.SCARD_ATTR_CURRENT_BWT,
-  CurrentCwt = ffi.SCARD_ATTR_CURRENT_CWT,
-  CurrentEbcEncoding = ffi.SCARD_ATTR_CURRENT_EBC_ENCODING,
-  ExtendedBwt = ffi.SCARD_ATTR_EXTENDED_BWT,
-  IccPresence = ffi.SCARD_ATTR_ICC_PRESENCE,
-  IccInterfaceStatus = ffi.SCARD_ATTR_ICC_INTERFACE_STATUS,
-  CurrentIoState = ffi.SCARD_ATTR_CURRENT_IO_STATE,
-  AtrString = ffi.SCARD_ATTR_ATR_STRING,
-  IccTypePerAtr = ffi.SCARD_ATTR_ICC_TYPE_PER_ATR,
-  EscReset = ffi.SCARD_ATTR_ESC_RESET,
-  EscCancel = ffi.SCARD_ATTR_ESC_CANCEL,
-  EscAuthrequest = ffi.SCARD_ATTR_ESC_AUTHREQUEST,
-  Maxinput = ffi.SCARD_ATTR_MAXINPUT,
-  DeviceUnit = ffi.SCARD_ATTR_DEVICE_UNIT,
-  DeviceInUse = ffi.SCARD_ATTR_DEVICE_IN_USE,
-  DeviceFriendlyName = ffi.SCARD_ATTR_DEVICE_FRIENDLY_NAME,
-  DeviceSystemName = ffi.SCARD_ATTR_DEVICE_SYSTEM_NAME,
-  SupressT1IfsRequest = ffi.SCARD_ATTR_SUPRESS_T1_IFS_REQUEST,
-}
+export const Attribute = {
+  VendorName: ffi.SCARD_ATTR_VENDOR_NAME,
+  VendorIfdType: ffi.SCARD_ATTR_VENDOR_IFD_TYPE,
+  VendorIfdVersion: ffi.SCARD_ATTR_VENDOR_IFD_VERSION,
+  VendorIfdSerialNo: ffi.SCARD_ATTR_VENDOR_IFD_SERIAL_NO,
+  ChannelId: ffi.SCARD_ATTR_CHANNEL_ID,
+  AsyncProtocolTypes: ffi.SCARD_ATTR_ASYNC_PROTOCOL_TYPES,
+  DefaultClk: ffi.SCARD_ATTR_DEFAULT_CLK,
+  MaxClk: ffi.SCARD_ATTR_MAX_CLK,
+  DefaultDataRate: ffi.SCARD_ATTR_DEFAULT_DATA_RATE,
+  MaxDataRate: ffi.SCARD_ATTR_MAX_DATA_RATE,
+  MaxIfsd: ffi.SCARD_ATTR_MAX_IFSD,
+  SyncProtocolTypes: ffi.SCARD_ATTR_SYNC_PROTOCOL_TYPES,
+  PowerMgmtSupport: ffi.SCARD_ATTR_POWER_MGMT_SUPPORT,
+  UserToCardAuthDevice: ffi.SCARD_ATTR_USER_TO_CARD_AUTH_DEVICE,
+  UserAuthInputDevice: ffi.SCARD_ATTR_USER_AUTH_INPUT_DEVICE,
+  Characteristics: ffi.SCARD_ATTR_CHARACTERISTICS,
+  CurrentProtocolType: ffi.SCARD_ATTR_CURRENT_PROTOCOL_TYPE,
+  CurrentClk: ffi.SCARD_ATTR_CURRENT_CLK,
+  CurrentF: ffi.SCARD_ATTR_CURRENT_F,
+  CurrentD: ffi.SCARD_ATTR_CURRENT_D,
+  CurrentN: ffi.SCARD_ATTR_CURRENT_N,
+  CurrentW: ffi.SCARD_ATTR_CURRENT_W,
+  CurrentIfsc: ffi.SCARD_ATTR_CURRENT_IFSC,
+  CurrentIfsd: ffi.SCARD_ATTR_CURRENT_IFSD,
+  CurrentBwt: ffi.SCARD_ATTR_CURRENT_BWT,
+  CurrentCwt: ffi.SCARD_ATTR_CURRENT_CWT,
+  CurrentEbcEncoding: ffi.SCARD_ATTR_CURRENT_EBC_ENCODING,
+  ExtendedBwt: ffi.SCARD_ATTR_EXTENDED_BWT,
+  IccPresence: ffi.SCARD_ATTR_ICC_PRESENCE,
+  IccInterfaceStatus: ffi.SCARD_ATTR_ICC_INTERFACE_STATUS,
+  CurrentIoState: ffi.SCARD_ATTR_CURRENT_IO_STATE,
+  AtrString: ffi.SCARD_ATTR_ATR_STRING,
+  IccTypePerAtr: ffi.SCARD_ATTR_ICC_TYPE_PER_ATR,
+  EscReset: ffi.SCARD_ATTR_ESC_RESET,
+  EscCancel: ffi.SCARD_ATTR_ESC_CANCEL,
+  EscAuthrequest: ffi.SCARD_ATTR_ESC_AUTHREQUEST,
+  Maxinput: ffi.SCARD_ATTR_MAXINPUT,
+  DeviceUnit: ffi.SCARD_ATTR_DEVICE_UNIT,
+  DeviceInUse: ffi.SCARD_ATTR_DEVICE_IN_USE,
+  DeviceFriendlyName: ffi.SCARD_ATTR_DEVICE_FRIENDLY_NAME,
+  DeviceSystemName: ffi.SCARD_ATTR_DEVICE_SYSTEM_NAME,
+  SupressT1IfsRequest: ffi.SCARD_ATTR_SUPRESS_T1_IFS_REQUEST,
+} as const;
+export type Attribute = (typeof Attribute)[keyof typeof Attribute];
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
 /* ------------------------------------------------------------------ */
 
 /**
- * Convert a raw protocol `DWORD` to a {@link Protocol} variant.
+ * Convert a raw protocol `DWORD` to a {@link Protocol} value.
  *
  * Returns `undefined` for `SCARD_PROTOCOL_UNDEFINED` (no active protocol)
  * and unknown values.

@@ -3,7 +3,7 @@
  *
  * Maps 1:1 to the `SCARD_E_*` / `SCARD_W_*` / `SCARD_F_*` constants
  * from the PC/SC C API. Use {@link errorFromRaw} to convert a raw return
- * code to an `Error` variant, and {@link errorMessage} for a
+ * code to an {@link Error} value, and {@link errorMessage} for a
  * human-readable description.
  *
  * @see {@link https://pcsclite.apdu.fr/api/group__ErrorCodes.html | pcsclite Error Codes}
@@ -14,72 +14,75 @@
 
 import * as ffi from '@remirth/pcsc-sys';
 
-/** PC/SC error codes. Each variant's numeric value matches the C constant. */
-export enum Error {
-  Success = ffi.SCARD_S_SUCCESS,
-  InternalError = ffi.SCARD_F_INTERNAL_ERROR,
-  Cancelled = ffi.SCARD_E_CANCELLED,
-  InvalidHandle = ffi.SCARD_E_INVALID_HANDLE,
-  InvalidParameter = ffi.SCARD_E_INVALID_PARAMETER,
-  InvalidTarget = ffi.SCARD_E_INVALID_TARGET,
-  NoMemory = ffi.SCARD_E_NO_MEMORY,
-  WaitedTooLong = ffi.SCARD_F_WAITED_TOO_LONG,
-  InsufficientBuffer = ffi.SCARD_E_INSUFFICIENT_BUFFER,
-  UnknownReader = ffi.SCARD_E_UNKNOWN_READER,
-  Timeout = ffi.SCARD_E_TIMEOUT,
-  SharingViolation = ffi.SCARD_E_SHARING_VIOLATION,
-  NoSmartcard = ffi.SCARD_E_NO_SMARTCARD,
-  UnknownCard = ffi.SCARD_E_UNKNOWN_CARD,
-  CantDispose = ffi.SCARD_E_CANT_DISPOSE,
-  ProtoMismatch = ffi.SCARD_E_PROTO_MISMATCH,
-  NotReady = ffi.SCARD_E_NOT_READY,
-  InvalidValue = ffi.SCARD_E_INVALID_VALUE,
-  SystemCancelled = ffi.SCARD_E_SYSTEM_CANCELLED,
-  CommError = ffi.SCARD_F_COMM_ERROR,
-  UnknownError = ffi.SCARD_F_UNKNOWN_ERROR,
-  InvalidAtr = ffi.SCARD_E_INVALID_ATR,
-  NotTransacted = ffi.SCARD_E_NOT_TRANSACTED,
-  ReaderUnavailable = ffi.SCARD_E_READER_UNAVAILABLE,
-  Shutdown = ffi.SCARD_P_SHUTDOWN,
-  PciTooSmall = ffi.SCARD_E_PCI_TOO_SMALL,
-  ReaderUnsupported = ffi.SCARD_E_READER_UNSUPPORTED,
-  DuplicateReader = ffi.SCARD_E_DUPLICATE_READER,
-  CardUnsupported = ffi.SCARD_E_CARD_UNSUPPORTED,
-  NoService = ffi.SCARD_E_NO_SERVICE,
-  ServiceStopped = ffi.SCARD_E_SERVICE_STOPPED,
-  UnsupportedFeature = ffi.SCARD_E_UNSUPPORTED_FEATURE,
-  IccInstallation = ffi.SCARD_E_ICC_INSTALLATION,
-  IccCreateorder = ffi.SCARD_E_ICC_CREATEORDER,
-  DirNotFound = ffi.SCARD_E_DIR_NOT_FOUND,
-  FileNotFound = ffi.SCARD_E_FILE_NOT_FOUND,
-  NoDir = ffi.SCARD_E_NO_DIR,
-  NoFile = ffi.SCARD_E_NO_FILE,
-  NoAccess = ffi.SCARD_E_NO_ACCESS,
-  WriteTooMany = ffi.SCARD_E_WRITE_TOO_MANY,
-  BadSeek = ffi.SCARD_E_BAD_SEEK,
-  InvalidChv = ffi.SCARD_E_INVALID_CHV,
-  UnknownResMng = ffi.SCARD_E_UNKNOWN_RES_MNG,
-  NoSuchCertificate = ffi.SCARD_E_NO_SUCH_CERTIFICATE,
-  CertificateUnavailable = ffi.SCARD_E_CERTIFICATE_UNAVAILABLE,
-  NoReadersAvailable = ffi.SCARD_E_NO_READERS_AVAILABLE,
-  CommDataLost = ffi.SCARD_E_COMM_DATA_LOST,
-  NoKeyContainer = ffi.SCARD_E_NO_KEY_CONTAINER,
-  ServerTooBusy = ffi.SCARD_E_SERVER_TOO_BUSY,
-  UnsupportedCard = ffi.SCARD_W_UNSUPPORTED_CARD,
-  UnresponsiveCard = ffi.SCARD_W_UNRESPONSIVE_CARD,
-  UnpoweredCard = ffi.SCARD_W_UNPOWERED_CARD,
-  ResetCard = ffi.SCARD_W_RESET_CARD,
-  RemovedCard = ffi.SCARD_W_REMOVED_CARD,
-  SecurityViolation = ffi.SCARD_W_SECURITY_VIOLATION,
-  WrongChv = ffi.SCARD_W_WRONG_CHV,
-  ChvBlocked = ffi.SCARD_W_CHV_BLOCKED,
-  Eof = ffi.SCARD_W_EOF,
-  CancelledByUser = ffi.SCARD_W_CANCELLED_BY_USER,
-  CardNotAuthenticated = ffi.SCARD_W_CARD_NOT_AUTHENTICATED,
-  CacheItemNotFound = ffi.SCARD_W_CACHE_ITEM_NOT_FOUND,
-  CacheItemStale = ffi.SCARD_W_CACHE_ITEM_STALE,
-  CacheItemTooBig = ffi.SCARD_W_CACHE_ITEM_TOO_BIG,
-}
+/** PC/SC error codes. Each member's numeric value matches the C constant. */
+export const Error = {
+  Success: ffi.SCARD_S_SUCCESS,
+  InternalError: ffi.SCARD_F_INTERNAL_ERROR,
+  Cancelled: ffi.SCARD_E_CANCELLED,
+  InvalidHandle: ffi.SCARD_E_INVALID_HANDLE,
+  InvalidParameter: ffi.SCARD_E_INVALID_PARAMETER,
+  InvalidTarget: ffi.SCARD_E_INVALID_TARGET,
+  NoMemory: ffi.SCARD_E_NO_MEMORY,
+  WaitedTooLong: ffi.SCARD_F_WAITED_TOO_LONG,
+  InsufficientBuffer: ffi.SCARD_E_INSUFFICIENT_BUFFER,
+  UnknownReader: ffi.SCARD_E_UNKNOWN_READER,
+  Timeout: ffi.SCARD_E_TIMEOUT,
+  SharingViolation: ffi.SCARD_E_SHARING_VIOLATION,
+  NoSmartcard: ffi.SCARD_E_NO_SMARTCARD,
+  UnknownCard: ffi.SCARD_E_UNKNOWN_CARD,
+  CantDispose: ffi.SCARD_E_CANT_DISPOSE,
+  ProtoMismatch: ffi.SCARD_E_PROTO_MISMATCH,
+  NotReady: ffi.SCARD_E_NOT_READY,
+  InvalidValue: ffi.SCARD_E_INVALID_VALUE,
+  SystemCancelled: ffi.SCARD_E_SYSTEM_CANCELLED,
+  CommError: ffi.SCARD_F_COMM_ERROR,
+  UnknownError: ffi.SCARD_F_UNKNOWN_ERROR,
+  InvalidAtr: ffi.SCARD_E_INVALID_ATR,
+  NotTransacted: ffi.SCARD_E_NOT_TRANSACTED,
+  ReaderUnavailable: ffi.SCARD_E_READER_UNAVAILABLE,
+  Shutdown: ffi.SCARD_P_SHUTDOWN,
+  PciTooSmall: ffi.SCARD_E_PCI_TOO_SMALL,
+  ReaderUnsupported: ffi.SCARD_E_READER_UNSUPPORTED,
+  DuplicateReader: ffi.SCARD_E_DUPLICATE_READER,
+  CardUnsupported: ffi.SCARD_E_CARD_UNSUPPORTED,
+  NoService: ffi.SCARD_E_NO_SERVICE,
+  ServiceStopped: ffi.SCARD_E_SERVICE_STOPPED,
+  UnsupportedFeature: ffi.SCARD_E_UNSUPPORTED_FEATURE,
+  IccInstallation: ffi.SCARD_E_ICC_INSTALLATION,
+  IccCreateorder: ffi.SCARD_E_ICC_CREATEORDER,
+  DirNotFound: ffi.SCARD_E_DIR_NOT_FOUND,
+  FileNotFound: ffi.SCARD_E_FILE_NOT_FOUND,
+  NoDir: ffi.SCARD_E_NO_DIR,
+  NoFile: ffi.SCARD_E_NO_FILE,
+  NoAccess: ffi.SCARD_E_NO_ACCESS,
+  WriteTooMany: ffi.SCARD_E_WRITE_TOO_MANY,
+  BadSeek: ffi.SCARD_E_BAD_SEEK,
+  InvalidChv: ffi.SCARD_E_INVALID_CHV,
+  UnknownResMng: ffi.SCARD_E_UNKNOWN_RES_MNG,
+  NoSuchCertificate: ffi.SCARD_E_NO_SUCH_CERTIFICATE,
+  CertificateUnavailable: ffi.SCARD_E_CERTIFICATE_UNAVAILABLE,
+  NoReadersAvailable: ffi.SCARD_E_NO_READERS_AVAILABLE,
+  CommDataLost: ffi.SCARD_E_COMM_DATA_LOST,
+  NoKeyContainer: ffi.SCARD_E_NO_KEY_CONTAINER,
+  ServerTooBusy: ffi.SCARD_E_SERVER_TOO_BUSY,
+  UnsupportedCard: ffi.SCARD_W_UNSUPPORTED_CARD,
+  UnresponsiveCard: ffi.SCARD_W_UNRESPONSIVE_CARD,
+  UnpoweredCard: ffi.SCARD_W_UNPOWERED_CARD,
+  ResetCard: ffi.SCARD_W_RESET_CARD,
+  RemovedCard: ffi.SCARD_W_REMOVED_CARD,
+  SecurityViolation: ffi.SCARD_W_SECURITY_VIOLATION,
+  WrongChv: ffi.SCARD_W_WRONG_CHV,
+  ChvBlocked: ffi.SCARD_W_CHV_BLOCKED,
+  Eof: ffi.SCARD_W_EOF,
+  CancelledByUser: ffi.SCARD_W_CANCELLED_BY_USER,
+  CardNotAuthenticated: ffi.SCARD_W_CARD_NOT_AUTHENTICATED,
+  CacheItemNotFound: ffi.SCARD_W_CACHE_ITEM_NOT_FOUND,
+  CacheItemStale: ffi.SCARD_W_CACHE_ITEM_STALE,
+  CacheItemTooBig: ffi.SCARD_W_CACHE_ITEM_TOO_BIG,
+} as const;
+
+/** A PC/SC error code value. */
+export type Error = (typeof Error)[keyof typeof Error];
 
 const ERROR_MESSAGES: Record<number, string> = {
   [Error.InternalError]: 'An internal consistency check failed',
@@ -168,7 +171,7 @@ for (const key of Object.keys(Error)) {
 }
 
 /**
- * Convert a raw `LONG` return code from the C API to an {@link Error} variant.
+ * Convert a raw `LONG` return code from the C API to an {@link Error} value.
  *
  * Unknown values are mapped to {@link Error.UnknownError}.
  *
@@ -179,7 +182,7 @@ export function errorFromRaw(raw: number): Error {
 }
 
 /**
- * Get a human-readable description for an {@link Error} variant.
+ * Get a human-readable description for an {@link Error} value.
  *
  * @param error - The error code to describe.
  */
@@ -194,7 +197,7 @@ export function errorMessage(error: Error): string {
  * {@link ffi.SCARD_S_SUCCESS | SCARD_S_SUCCESS}.
  *
  * @param result - Raw return code from a PC/SC function.
- * @throws The error code as an {@link Error} value.
+ * @throws The error code as an {@link Error} value (a number).
  */
 export function checkResult(result: number): void {
   if (result !== ffi.SCARD_S_SUCCESS) {

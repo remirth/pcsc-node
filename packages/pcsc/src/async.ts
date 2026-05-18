@@ -16,7 +16,7 @@
 
 import type { Card, CardStatus } from './card.js';
 import { Context } from './context.js';
-import type { Scope, ShareMode, Protocols } from './enums.js';
+import type { Scope, ShareMode, Protocols, Disposition, Attribute } from './enums.js';
 import type { ReaderState } from './reader.js';
 
 /**
@@ -118,7 +118,7 @@ export class CardAsync {
   }
 
   /** End a transaction. */
-  async endTransaction(disposition: number): Promise<void> {
+  async endTransaction(disposition: Disposition): Promise<void> {
     this.card.disconnect(disposition);
   }
 
@@ -133,7 +133,7 @@ export class CardAsync {
   }
 
   /** Read a card attribute. */
-  async getAttribute(attribute: number, buffer: Buffer): Promise<Buffer> {
+  async getAttribute(attribute: Attribute, buffer: Buffer): Promise<Buffer> {
     return this.card.getAttribute(attribute, buffer);
   }
 
@@ -143,7 +143,7 @@ export class CardAsync {
   }
 
   /** Disconnect from the card. */
-  async disconnect(disposition: number): Promise<void> {
+  async disconnect(disposition: Disposition): Promise<void> {
     this.card.disconnect(disposition);
   }
 }

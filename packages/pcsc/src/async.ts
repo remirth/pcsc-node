@@ -84,7 +84,11 @@ export class ContextAsync {
   }
 
   /** Connect to a smart card. Returns an {@link CardAsync}. */
-  async connect(reader: string, shareMode: ShareMode, preferredProtocols: Protocols): Promise<CardAsync> {
+  async connect(
+    reader: string,
+    shareMode: ShareMode,
+    preferredProtocols: Protocols,
+  ): Promise<CardAsync> {
     return this.lock(() => {
       const card = this.ctx.connect(reader, shareMode, preferredProtocols);
       return new CardAsync(card);
@@ -128,7 +132,11 @@ export class CardAsync {
   }
 
   /** Send a control command. */
-  async control(controlCode: number, sendBuffer: Buffer | null, recvBuffer: Buffer | null): Promise<Buffer> {
+  async control(
+    controlCode: number,
+    sendBuffer: Buffer | null,
+    recvBuffer: Buffer | null,
+  ): Promise<Buffer> {
     return this.card.control(controlCode, sendBuffer, recvBuffer);
   }
 

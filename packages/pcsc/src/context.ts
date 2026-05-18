@@ -57,9 +57,7 @@ export class Context {
     const phCtx = Buffer.alloc(8);
     const r = ffi.raw();
     checkResult(r.SCardEstablishContext(scope, null, null, phCtx));
-    const handle = ffi.isWindows
-      ? phCtx.readBigUInt64LE(0)
-      : phCtx.readInt32LE(0);
+    const handle = ffi.isWindows ? phCtx.readBigUInt64LE(0) : phCtx.readInt32LE(0);
     return new Context(handle);
   }
 

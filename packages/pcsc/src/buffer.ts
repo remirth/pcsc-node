@@ -18,6 +18,7 @@
  */
 
 import { platform } from 'node:os';
+
 import { MAX_ATR_SIZE } from '@remirth/pcsc-sys';
 
 const IS_WINDOWS = platform() === 'win32';
@@ -41,7 +42,7 @@ export const READER_STATE_SIZE = RS_OFFSET_RGBATR + ATR_SIZE;
  *
  * @param value - The initial value (default 0).
  */
-export function allocUint32(value: number = 0): Buffer {
+export function allocUint32(value = 0): Buffer {
   const buf = Buffer.alloc(4);
   buf.writeUInt32LE(value, 0);
   return buf;

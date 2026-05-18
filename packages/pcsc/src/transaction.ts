@@ -6,10 +6,10 @@
 
 import * as ffi from '@remirth/pcsc-sys';
 
+import type { Card } from './card.js';
 import { Disposition } from './enums.js';
 import type { ShareMode, Protocols } from './enums.js';
 import { checkResult } from './error.js';
-import type { Card } from './card.js';
 
 /**
  * An exclusive transaction with a smart card.

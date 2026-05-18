@@ -8,20 +8,11 @@ import * as ffi from '@remirth/pcsc-sys';
 
 import { allocUint32, readUint32 } from './buffer.js';
 import type { Context } from './context.js';
-import { Transaction } from './transaction.js';
-import { ReaderNames } from './reader.js';
-import {
-  Disposition,
-  Protocol,
-  protocolFromRaw,
-} from './enums.js';
-import type {
-  Protocols,
-  ShareMode,
-  Status,
-  Attribute,
-} from './enums.js';
+import { Disposition, Protocol, protocolFromRaw } from './enums.js';
+import type { Protocols, ShareMode, Status, Attribute } from './enums.js';
 import { Error, checkResult } from './error.js';
+import { ReaderNames } from './reader.js';
+import { Transaction } from './transaction.js';
 
 /**
  * Status information about a card in a reader.
@@ -168,15 +159,7 @@ export class Card {
     const atrLen = allocUint32(atrBuffer.length);
 
     checkResult(
-      r.SCardStatus(
-        this.handle,
-        namesBuffer,
-        readerLen,
-        rawStatus,
-        rawProtocol,
-        atrBuffer,
-        atrLen,
-      ),
+      r.SCardStatus(this.handle, namesBuffer, readerLen, rawStatus, rawProtocol, atrBuffer, atrLen),
     );
 
     const readerLenVal = readUint32(readerLen, 0);
@@ -200,15 +183,7 @@ export class Card {
     const readerLenBuf = allocUint32(0);
     const atrLenBuf = allocUint32(0);
 
-    const result = r.SCardStatus(
-      this.handle,
-      null,
-      readerLenBuf,
-      null,
-      null,
-      null,
-      atrLenBuf,
-    );
+    const result = r.SCardStatus(this.handle, null, readerLenBuf, null, null, null, atrLenBuf);
 
     if (result === Error.InsufficientBuffer) {
       return {

@@ -1,31 +1,81 @@
+/**
+ * PC/SC API enumerations, bitmask constants, and helper functions.
+ *
+ * @module
+ */
+
 import * as ffi from '@remirth/pcsc-sys';
 
+/* ------------------------------------------------------------------ */
+/*  Scope                                                             */
+/* ------------------------------------------------------------------ */
+
+/** Context scope passed to {@link Context.establish}. */
 export enum Scope {
+  /** User context (most common). */
   User = ffi.SCARD_SCOPE_USER,
+  /** Terminal context. */
   Terminal = ffi.SCARD_SCOPE_TERMINAL,
+  /** System context. */
   System = ffi.SCARD_SCOPE_SYSTEM,
+  /** Global context. */
   Global = ffi.SCARD_SCOPE_GLOBAL,
 }
 
+/* ------------------------------------------------------------------ */
+/*  Share modes                                                       */
+/* ------------------------------------------------------------------ */
+
+/** How a reader connection is shared. */
 export enum ShareMode {
+  /** Exclusive connection — no other connections allowed. */
   Exclusive = ffi.SCARD_SHARE_EXCLUSIVE,
+  /** Shared connection — other shared connections allowed. */
   Shared = ffi.SCARD_SHARE_SHARED,
+  /** Direct connection — no protocol negotiation. */
   Direct = ffi.SCARD_SHARE_DIRECT,
 }
 
+/* ------------------------------------------------------------------ */
+/*  Disposition                                                       */
+/* ------------------------------------------------------------------ */
+
+/** Action to take when disconnecting from a card. */
 export enum Disposition {
+  /** Leave the card as-is. */
   LeaveCard = ffi.SCARD_LEAVE_CARD,
+  /** Reset the card. */
   ResetCard = ffi.SCARD_RESET_CARD,
+  /** Unpower the card. */
   UnpowerCard = ffi.SCARD_UNPOWER_CARD,
+  /** Eject the card. */
   EjectCard = ffi.SCARD_EJECT_CARD,
 }
 
+/* ------------------------------------------------------------------ */
+/*  Protocol                                                          */
+/* ------------------------------------------------------------------ */
+
+/** A smart card communication protocol. */
 export enum Protocol {
+  /** T=0 (byte-oriented) protocol. */
   T0 = ffi.SCARD_PROTOCOL_T0,
+  /** T=1 (block-oriented) protocol. */
   T1 = ffi.SCARD_PROTOCOL_T1,
+  /** Raw protocol (no TPDU layer). */
   RAW = ffi.SCARD_PROTOCOL_RAW,
 }
 
+/* ------------------------------------------------------------------ */
+/*  Protocols (bitmask)                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Bitmask of possible communication protocols.
+ *
+ * Combine with bitwise OR: `Protocols.T0 | Protocols.T1`.
+ * Use `Protocols.ANY` as a shorthand for T0|T1.
+ */
 export const Protocols = {
   UNDEFINED: ffi.SCARD_PROTOCOL_UNDEFINED,
   T0: ffi.SCARD_PROTOCOL_T0,
@@ -35,6 +85,16 @@ export const Protocols = {
 } as const;
 export type Protocols = number;
 
+/* ------------------------------------------------------------------ */
+/*  State (bitmask) — reader / event states                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Bitmask of card reader states.
+ *
+ * These are used with {@link ReaderState} to track reader status
+ * and with {@link Context.getStatusChange} to detect state transitions.
+ */
 export const State = {
   UNAWARE: ffi.SCARD_STATE_UNAWARE,
   IGNORE: ffi.SCARD_STATE_IGNORE,
@@ -51,6 +111,16 @@ export const State = {
 } as const;
 export type State = number;
 
+/* ------------------------------------------------------------------ */
+/*  Status (bitmask) — card insert/removal states                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Bitmask of smart card status in a reader.
+ *
+ * Unlike the raw PC/SC constants, these use the same bit values
+ * across all platforms.
+ */
 export const Status = {
   UNKNOWN: 0x0001,
   ABSENT: 0x0002,
@@ -62,6 +132,11 @@ export const Status = {
 } as const;
 export type Status = number;
 
+/* ------------------------------------------------------------------ */
+/*  Attribute classes                                                 */
+/* ------------------------------------------------------------------ */
+
+/** Category of a reader or card attribute. */
 export enum AttributeClass {
   VendorInfo = ffi.SCARD_CLASS_VENDOR_INFO,
   Communications = ffi.SCARD_CLASS_COMMUNICATIONS,
@@ -75,6 +150,15 @@ export enum AttributeClass {
   System = ffi.SCARD_CLASS_SYSTEM,
 }
 
+/* ------------------------------------------------------------------ */
+/*  Attribute IDs                                                     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Card reader attribute identifiers.
+ *
+ * Passed to {@link Card.getAttribute} / {@link Card.setAttribute}.
+ */
 export enum Attribute {
   VendorName = ffi.SCARD_ATTR_VENDOR_NAME,
   VendorIfdType = ffi.SCARD_ATTR_VENDOR_IFD_TYPE,
@@ -120,6 +204,18 @@ export enum Attribute {
   SupressT1IfsRequest = ffi.SCARD_ATTR_SUPRESS_T1_IFS_REQUEST,
 }
 
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Convert a raw protocol `DWORD` to a {@link Protocol} variant.
+ *
+ * Returns `undefined` for `SCARD_PROTOCOL_UNDEFINED` (no active protocol)
+ * and unknown values.
+ *
+ * @param raw - Raw `DWORD` from the C API.
+ */
 export function protocolFromRaw(raw: number): Protocol | undefined {
   switch (raw) {
     case ffi.SCARD_PROTOCOL_UNDEFINED:
@@ -135,6 +231,12 @@ export function protocolFromRaw(raw: number): Protocol | undefined {
   }
 }
 
+/**
+ * Test whether a bitmask value contains a specific flag.
+ *
+ * @param flags - The combined bitmask value.
+ * @param flag - The single flag to test.
+ */
 export function hasFlag(flags: number, flag: number): boolean {
   return (flags & flag) !== 0;
 }

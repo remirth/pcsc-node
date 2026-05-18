@@ -1,5 +1,20 @@
+/**
+ * Error codes returned by PC/SC operations.
+ *
+ * Maps 1:1 to the `SCARD_E_*` / `SCARD_W_*` / `SCARD_F_*` constants
+ * from the PC/SC C API. Use {@link errorFromRaw} to convert a raw return
+ * code to an `Error` variant, and {@link errorMessage} for a
+ * human-readable description.
+ *
+ * @see {@link https://pcsclite.apdu.fr/api/group__ErrorCodes.html | pcsclite Error Codes}
+ * @see {@link https://learn.microsoft.com/en-us/windows/win32/secauthn/smart-card-return-values | MSDN Smart Card Return Values}
+ *
+ * @module
+ */
+
 import * as ffi from '@remirth/pcsc-sys';
 
+/** PC/SC error codes. Each variant's numeric value matches the C constant. */
 export enum Error {
   Success = ffi.SCARD_S_SUCCESS,
   InternalError = ffi.SCARD_F_INTERNAL_ERROR,
@@ -70,19 +85,15 @@ const ERROR_MESSAGES: Record<number, string> = {
   [Error.InternalError]: 'An internal consistency check failed',
   [Error.Cancelled]: 'The action was cancelled by an SCardCancel request',
   [Error.InvalidHandle]: 'The supplied handle was invalid',
-  [Error.InvalidParameter]:
-    'One or more of the supplied parameters could not be properly interpreted',
+  [Error.InvalidParameter]: 'One or more of the supplied parameters could not be properly interpreted',
   [Error.InvalidTarget]: 'Registry startup information is missing or invalid',
   [Error.NoMemory]: 'Not enough memory available to complete this command',
   [Error.WaitedTooLong]: 'An internal consistency timer has expired',
-  [Error.InsufficientBuffer]:
-    'The data buffer to receive returned data is too small for the returned data',
+  [Error.InsufficientBuffer]: 'The data buffer to receive returned data is too small for the returned data',
   [Error.UnknownReader]: 'The specified reader name is not recognized',
   [Error.Timeout]: 'The user-specified timeout value has expired',
-  [Error.SharingViolation]:
-    'The smart card cannot be accessed because of other connections outstanding',
-  [Error.NoSmartcard]:
-    'The operation requires a Smart Card, but no Smart Card is currently in the device',
+  [Error.SharingViolation]: 'The smart card cannot be accessed because of other connections outstanding',
+  [Error.NoSmartcard]: 'The operation requires a Smart Card, but no Smart Card is currently in the device',
   [Error.UnknownCard]: 'The specified smart card name is not recognized',
   [Error.CantDispose]: 'The system could not dispose of the media in the requested manner',
   [Error.ProtoMismatch]:
@@ -90,8 +101,7 @@ const ERROR_MESSAGES: Record<number, string> = {
   [Error.NotReady]: 'The reader or smart card is not ready to accept commands',
   [Error.InvalidValue]:
     'One or more of the supplied parameters values could not be properly interpreted',
-  [Error.SystemCancelled]:
-    'The action was cancelled by the system, presumably to log off or shut down',
+  [Error.SystemCancelled]: 'The action was cancelled by the system, presumably to log off or shut down',
   [Error.CommError]: 'An internal communications error has been detected',
   [Error.UnknownError]: 'An internal error has been detected, but the source is unknown',
   [Error.InvalidAtr]: 'An ATR obtained from the registry is not a valid ATR string',
@@ -112,7 +122,8 @@ const ERROR_MESSAGES: Record<number, string> = {
   [Error.NoDir]: 'The supplied path does not represent a smart card directory',
   [Error.NoFile]: 'The supplied path does not represent a smart card file',
   [Error.NoAccess]: 'Access is denied to this file',
-  [Error.WriteTooMany]: 'The smart card does not have enough memory to store the information',
+  [Error.WriteTooMany]:
+    'The smart card does not have enough memory to store the information',
   [Error.BadSeek]: 'There was an error trying to set the smart card file object pointer',
   [Error.InvalidChv]: 'The supplied PIN is incorrect',
   [Error.UnknownResMng]: 'An unrecognized error code was returned from a layered component',
@@ -122,14 +133,17 @@ const ERROR_MESSAGES: Record<number, string> = {
   [Error.CommDataLost]:
     'A communications error with the smart card has been detected. Retry the operation',
   [Error.NoKeyContainer]: 'The requested key container does not exist on the smart card',
-  [Error.ServerTooBusy]: 'The smart card resource manager is too busy to complete this operation',
+  [Error.ServerTooBusy]:
+    'The smart card resource manager is too busy to complete this operation',
   [Error.UnsupportedCard]:
     'The reader cannot communicate with the card, due to ATR string configuration conflicts',
   [Error.UnresponsiveCard]: 'The smart card is not responding to a reset',
   [Error.UnpoweredCard]:
     'Power has been removed from the smart card, so that further communication is not possible',
-  [Error.ResetCard]: 'The smart card has been reset, so any shared state information is invalid',
-  [Error.RemovedCard]: 'The smart card has been removed, so further communication is not possible',
+  [Error.ResetCard]:
+    'The smart card has been reset, so any shared state information is invalid',
+  [Error.RemovedCard]:
+    'The smart card has been removed, so further communication is not possible',
   [Error.SecurityViolation]: 'Access was denied because of a security violation',
   [Error.WrongChv]: 'The card cannot be accessed because the wrong PIN was presented',
   [Error.ChvBlocked]:
@@ -138,7 +152,8 @@ const ERROR_MESSAGES: Record<number, string> = {
   [Error.CancelledByUser]: 'The user pressed "Cancel" on a Smart Card Selection Dialog',
   [Error.CardNotAuthenticated]: 'No PIN was presented to the smart card',
   [Error.CacheItemNotFound]: 'The requested item could not be found in the cache',
-  [Error.CacheItemStale]: 'The requested cache item is too old and was deleted from the cache',
+  [Error.CacheItemStale]:
+    'The requested cache item is too old and was deleted from the cache',
   [Error.CacheItemTooBig]:
     'The new cache item exceeds the maximum per-item size defined for the cache',
 };
@@ -152,20 +167,37 @@ for (const key of Object.keys(Error)) {
   }
 }
 
+/**
+ * Convert a raw `LONG` return code from the C API to an {@link Error} variant.
+ *
+ * Unknown values are mapped to {@link Error.UnknownError}.
+ *
+ * @param raw - The raw `LONG` return value from a PC/SC C function.
+ */
 export function errorFromRaw(raw: number): Error {
   return ERROR_VALUE_MAP.get(raw) ?? Error.UnknownError;
 }
 
+/**
+ * Get a human-readable description for an {@link Error} variant.
+ *
+ * @param error - The error code to describe.
+ */
 export function errorMessage(error: Error): string {
   return ERROR_MESSAGES[error] ?? 'Unknown error';
 }
 
-function tryPcsc(result: number): void {
+/**
+ * Assert that a PC/SC call succeeded.
+ *
+ * Throws the corresponding {@link Error} value if `result` is not
+ * {@link ffi.SCARD_S_SUCCESS | SCARD_S_SUCCESS}.
+ *
+ * @param result - Raw return code from a PC/SC function.
+ * @throws The error code as an {@link Error} value.
+ */
+export function checkResult(result: number): void {
   if (result !== ffi.SCARD_S_SUCCESS) {
     throw errorFromRaw(result);
   }
-}
-
-export function checkResult(result: number): void {
-  tryPcsc(result);
 }

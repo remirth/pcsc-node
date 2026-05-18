@@ -1,0 +1,17 @@
+{
+  "name": "pcsc-monorepo",
+  "private": true,
+  "description": "Node.js PC/SC smart card bindings — monorepo",
+  "license": "MIT",
+  "engines": {
+    "node": ">=26.0.0"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "typescript": "^5.9.0"
+  }
+}

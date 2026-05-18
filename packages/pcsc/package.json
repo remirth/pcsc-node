@@ -1,0 +1,33 @@
+{
+  "name": "@remirth/pcsc",
+  "version": "1.0.0",
+  "description": "High-level PC/SC smart card bindings for Node.js",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=26.0.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": ["pcsc", "smartcard", "apdu"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remirth/pcsc"
+  },
+  "dependencies": {
+    "@remirth/pcsc-sys": "workspace:*"
+  }
+}

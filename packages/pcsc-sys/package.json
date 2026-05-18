@@ -2,11 +2,20 @@
   "name": "@remirth/pcsc-sys",
   "version": "1.0.0",
   "description": "Low-level FFI bindings to the PC/SC C API for Node.js",
+  "keywords": [
+    "ffi",
+    "pcsc",
+    "smartcard"
+  ],
   "license": "MIT",
-  "type": "module",
-  "engines": {
-    "node": ">=26.0.0"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remirth/pcsc"
   },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -15,16 +24,11 @@
       "default": "./dist/index.js"
     }
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "keywords": ["pcsc", "smartcard", "ffi"],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/remirth/pcsc"
+  "engines": {
+    "node": ">=26.0.0"
   }
 }

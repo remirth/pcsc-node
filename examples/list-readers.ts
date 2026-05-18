@@ -1,4 +1,4 @@
-import { Context, Scope, Error } from '@remirth/pcsc';
+import { Context, Scope } from '@remirth/pcsc';
 
 function main(): void {
   const ctx = Context.establish(Scope.User);

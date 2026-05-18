@@ -2,7 +2,6 @@ import { DynamicLibrary, getRawPointer, suffix, toBuffer, toString } from 'node:
 import { platform } from 'node:os';
 
 import { isWindows } from './types.js';
-
 import type { DWORD, LONG, RawContext, RawCard } from './types.js';
 
 const LIBNAME = getLibraryName();
@@ -27,22 +26,74 @@ let _lib: DynamicLibrary | null = null;
 let _functions: Record<string, (...args: unknown[]) => unknown> | null = null;
 
 interface SCardFunctions {
-  SCardEstablishContext(dwScope: DWORD, pvReserved1: null, pvReserved2: null, phContext: Buffer): LONG;
+  SCardEstablishContext(
+    dwScope: DWORD,
+    pvReserved1: null,
+    pvReserved2: null,
+    phContext: Buffer,
+  ): LONG;
   SCardReleaseContext(hContext: RawContext): LONG;
   SCardIsValidContext(hContext: RawContext): LONG;
   SCardCancel(hContext: RawContext): LONG;
-  SCardConnect(hContext: RawContext, szReader: string, dwShareMode: DWORD, dwPreferredProtocols: DWORD, phCard: Buffer, pdwActiveProtocol: Buffer): LONG;
-  SCardReconnect(hCard: RawCard, dwShareMode: DWORD, dwPreferredProtocols: DWORD, dwInitialization: DWORD, pdwActiveProtocol: Buffer): LONG;
+  SCardConnect(
+    hContext: RawContext,
+    szReader: string,
+    dwShareMode: DWORD,
+    dwPreferredProtocols: DWORD,
+    phCard: Buffer,
+    pdwActiveProtocol: Buffer,
+  ): LONG;
+  SCardReconnect(
+    hCard: RawCard,
+    dwShareMode: DWORD,
+    dwPreferredProtocols: DWORD,
+    dwInitialization: DWORD,
+    pdwActiveProtocol: Buffer,
+  ): LONG;
   SCardDisconnect(hCard: RawCard, dwDisposition: DWORD): LONG;
-  SCardGetStatusChange(hContext: RawContext, dwTimeout: DWORD, rgReaderStates: Buffer, cReaders: DWORD): LONG;
-  SCardListReaders(hContext: RawContext, mszGroups: null, mszReaders: Buffer | null, pcchReaders: Buffer): LONG;
+  SCardGetStatusChange(
+    hContext: RawContext,
+    dwTimeout: DWORD,
+    rgReaderStates: Buffer,
+    cReaders: DWORD,
+  ): LONG;
+  SCardListReaders(
+    hContext: RawContext,
+    mszGroups: null,
+    mszReaders: Buffer | null,
+    pcchReaders: Buffer,
+  ): LONG;
   SCardBeginTransaction(hCard: RawCard): LONG;
   SCardEndTransaction(hCard: RawCard, dwDisposition: DWORD): LONG;
-  SCardStatus(hCard: RawCard, szReaderName: Buffer | null, pcchReaderLen: Buffer | null, pdwState: Buffer | null, pdwProtocol: Buffer | null, pbAtr: Buffer | null, pcbAtrLen: Buffer | null): LONG;
+  SCardStatus(
+    hCard: RawCard,
+    szReaderName: Buffer | null,
+    pcchReaderLen: Buffer | null,
+    pdwState: Buffer | null,
+    pdwProtocol: Buffer | null,
+    pbAtr: Buffer | null,
+    pcbAtrLen: Buffer | null,
+  ): LONG;
   SCardGetAttrib(hCard: RawCard, dwAttrId: DWORD, pbAttr: Buffer | null, pcbAttrLen: Buffer): LONG;
   SCardSetAttrib(hCard: RawCard, dwAttrId: DWORD, pbAttr: Buffer, pcbAttrLen: DWORD): LONG;
-  SCardTransmit(hCard: RawCard, pioSendPci: bigint, pbSendBuffer: Buffer, cbSendLength: DWORD, pioRecvPci: Buffer | null, pbRecvBuffer: Buffer, pcbRecvLength: Buffer): LONG;
-  SCardControl(hCard: RawCard, dwControlCode: DWORD, pbSendBuffer: Buffer | null, cbSendLength: DWORD, pbRecvBuffer: Buffer | null, cbRecvLength: DWORD, lpBytesReturned: Buffer): LONG;
+  SCardTransmit(
+    hCard: RawCard,
+    pioSendPci: bigint,
+    pbSendBuffer: Buffer,
+    cbSendLength: DWORD,
+    pioRecvPci: Buffer | null,
+    pbRecvBuffer: Buffer,
+    pcbRecvLength: Buffer,
+  ): LONG;
+  SCardControl(
+    hCard: RawCard,
+    dwControlCode: DWORD,
+    pbSendBuffer: Buffer | null,
+    cbSendLength: DWORD,
+    pbRecvBuffer: Buffer | null,
+    cbRecvLength: DWORD,
+    lpBytesReturned: Buffer,
+  ): LONG;
 }
 
 let _raw: SCardFunctions | null = null;

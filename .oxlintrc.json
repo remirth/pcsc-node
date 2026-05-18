@@ -1,0 +1,63 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "oxc",
+    "import"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn",
+    "style": "warn"
+  },
+  "rules": {
+    "import/no-nodejs-modules": "off",
+    "import/no-named-export": "off",
+    "import/group-exports": "off",
+    "import/exports-last": "off",
+    "import/no-namespace": "off",
+    "import/prefer-default-export": "off",
+    "eslint/no-underscore-dangle": "off",
+    "eslint/no-ternary": "off",
+    "eslint/no-magic-numbers": "off",
+    "eslint/func-style": "off",
+    "eslint/curly": "off",
+    "eslint/sort-imports": "off",
+    "eslint/sort-keys": "off",
+    "eslint/new-cap": "off",
+    "eslint/max-statements": "off",
+    "eslint/init-declarations": "off",
+    "eslint/no-continue": "off",
+    "eslint/prefer-destructuring": "off",
+    "eslint/no-duplicate-imports": "off",
+    "eslint/prefer-arrow-callback": "off",
+    "eslint/id-length": "off",
+    "eslint/max-params": "off",
+    "eslint/prefer-template": "off",
+    "eslint/prefer-const": "off",
+    "unicorn/prefer-string-raw": "off",
+    "unicorn/numeric-separators-style": "off",
+    "unicorn/catch-error-name": "off",
+    "unicorn/no-null": "off",
+    "unicorn/number-literal-case": "off",
+    "unicorn/switch-case-braces": "off",
+    "no-console": "off",
+    "no-process-env": "warn",
+    "typescript/consistent-type-imports": "error",
+    "typescript/no-inferrable-types": "warn",
+    "typescript/consistent-indexed-object-style": "off",
+    "eslint/no-shadow": "warn"
+  },
+  "env": {
+    "node": true,
+    "builtin": true
+  },
+  "globals": {},
+  "settings": {},
+  "ignorePatterns": [
+    "dist",
+    "node_modules"
+  ]
+}

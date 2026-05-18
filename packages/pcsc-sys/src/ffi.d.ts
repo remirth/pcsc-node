@@ -1,18 +1,32 @@
 declare module 'node:ffi' {
   export type FFIType =
     | 'void'
-    | 'i8' | 'int8'
-    | 'u8' | 'uint8' | 'bool' | 'char'
-    | 'i16' | 'int16'
-    | 'u16' | 'uint16'
-    | 'i32' | 'int32'
-    | 'u32' | 'uint32'
-    | 'i64' | 'int64'
-    | 'u64' | 'uint64'
-    | 'f32' | 'float'
-    | 'f64' | 'double'
-    | 'pointer' | 'ptr'
-    | 'string' | 'str'
+    | 'i8'
+    | 'int8'
+    | 'u8'
+    | 'uint8'
+    | 'bool'
+    | 'char'
+    | 'i16'
+    | 'int16'
+    | 'u16'
+    | 'uint16'
+    | 'i32'
+    | 'int32'
+    | 'u32'
+    | 'uint32'
+    | 'i64'
+    | 'int64'
+    | 'u64'
+    | 'uint64'
+    | 'f32'
+    | 'float'
+    | 'f64'
+    | 'double'
+    | 'pointer'
+    | 'ptr'
+    | 'string'
+    | 'str'
     | 'buffer'
     | 'arraybuffer'
     | 'function';
@@ -37,7 +51,9 @@ declare module 'node:ffi' {
     close(): void;
     [Symbol.dispose](): void;
     getFunction(name: string, signature: Signature): (...args: unknown[]) => unknown;
-    getFunctions(definitions?: FunctionDefinitions): Record<string, (...args: unknown[]) => unknown>;
+    getFunctions(
+      definitions?: FunctionDefinitions,
+    ): Record<string, (...args: unknown[]) => unknown>;
     getSymbol(name: string): bigint;
     getSymbols(): Record<string, bigint>;
     registerCallback(signature: Signature, callback: (...args: unknown[]) => unknown): bigint;
@@ -106,9 +122,22 @@ declare module 'node:ffi' {
   export function toString(pointer: bigint): string | null;
   export function toBuffer(pointer: bigint, length: number, copy?: boolean): Buffer;
   export function toArrayBuffer(pointer: bigint, length: number, copy?: boolean): ArrayBuffer;
-  export function exportString(string: string, pointer: bigint, length: number, encoding?: string): void;
+  export function exportString(
+    string: string,
+    pointer: bigint,
+    length: number,
+    encoding?: string,
+  ): void;
   export function exportBuffer(buffer: Buffer, pointer: bigint, length: number): void;
-  export function exportArrayBuffer(arrayBuffer: ArrayBuffer, pointer: bigint, length: number): void;
-  export function exportArrayBufferView(arrayBufferView: ArrayBufferView, pointer: bigint, length: number): void;
+  export function exportArrayBuffer(
+    arrayBuffer: ArrayBuffer,
+    pointer: bigint,
+    length: number,
+  ): void;
+  export function exportArrayBufferView(
+    arrayBufferView: ArrayBufferView,
+    pointer: bigint,
+    length: number,
+  ): void;
   export function getRawPointer(source: Buffer | ArrayBuffer): bigint;
 }

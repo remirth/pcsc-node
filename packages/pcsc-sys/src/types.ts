@@ -7,8 +7,8 @@ export type LONG = number;
 export type RawContext = number | bigint;
 export type RawCard = number | bigint;
 
-export const SCARDCONTEXT_TYPE = isWindows ? 'pointer' as const : 'i32' as const;
-export const SCARDHANDLE_TYPE = isWindows ? 'pointer' as const : 'i32' as const;
+export const SCARDCONTEXT_TYPE = isWindows ? ('pointer' as const) : ('i32' as const);
+export const SCARDHANDLE_TYPE = isWindows ? ('pointer' as const) : ('i32' as const);
 
 export const SCARD_PROTOCOL_RAW: number = isWindows ? 0x0001_0000 : 0x0000_0004;
 

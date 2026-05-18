@@ -1,10 +1,11 @@
 import * as ffi from '@remirth/pcsc-sys';
 
+import { allocUint32, readUint32, READER_STATE_SIZE } from './buffer.js';
+import { Card } from './card.js';
 import { Scope, ShareMode, Protocols, Protocol, Protocol as ProtocolEnum } from './enums.js';
 import { Error, checkResult, errorFromRaw } from './error.js';
-import { Card } from './card.js';
-import { ReaderNames, ReaderState } from './reader.js';
-import { allocUint32, readUint32, READER_STATE_SIZE } from './buffer.js';
+import type { ReaderState } from './reader.js';
+import { ReaderNames } from './reader.js';
 
 export class Context {
   private handle: ffi.RawContext;
@@ -17,9 +18,7 @@ export class Context {
     const phCtx = Buffer.alloc(8);
     const r = ffi.raw();
     checkResult(r.SCardEstablishContext(scope, null, null, phCtx));
-    const handle = ffi.isWindows
-      ? phCtx.readBigUInt64LE(0)
-      : phCtx.readInt32LE(0);
+    const handle = ffi.isWindows ? phCtx.readBigUInt64LE(0) : phCtx.readInt32LE(0);
     return new Context(handle);
   }
 
@@ -82,18 +81,11 @@ export class Context {
     const phCard = Buffer.alloc(8);
     const pdwActiveProtocol = allocUint32(0);
 
-    checkResult(r.SCardConnect(
-      this.handle,
-      reader,
-      shareMode,
-      preferredProtocols,
-      phCard,
-      pdwActiveProtocol,
-    ));
+    checkResult(
+      r.SCardConnect(this.handle, reader, shareMode, preferredProtocols, phCard, pdwActiveProtocol),
+    );
 
-    const cardHandle = ffi.isWindows
-      ? phCard.readBigUInt64LE(0)
-      : phCard.readInt32LE(0);
+    const cardHandle = ffi.isWindows ? phCard.readBigUInt64LE(0) : phCard.readInt32LE(0);
 
     const activeProtocol = ffi.isWindows
       ? protocolFromRaw(readUint32(pdwActiveProtocol, 0))
@@ -136,10 +128,14 @@ export class Context {
 
 function protocolFromRaw(raw: number): Protocol {
   switch (raw) {
-    case ffi.SCARD_PROTOCOL_T0: return ProtocolEnum.T0;
-    case ffi.SCARD_PROTOCOL_T1: return ProtocolEnum.T1;
-    case ffi.SCARD_PROTOCOL_RAW: return ProtocolEnum.RAW;
-    default: return ProtocolEnum.T0;
+    case ffi.SCARD_PROTOCOL_T0:
+      return ProtocolEnum.T0;
+    case ffi.SCARD_PROTOCOL_T1:
+      return ProtocolEnum.T1;
+    case ffi.SCARD_PROTOCOL_RAW:
+      return ProtocolEnum.RAW;
+    default:
+      return ProtocolEnum.T0;
   }
 }
 

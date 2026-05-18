@@ -122,11 +122,16 @@ export enum Attribute {
 
 export function protocolFromRaw(raw: number): Protocol | undefined {
   switch (raw) {
-    case ffi.SCARD_PROTOCOL_UNDEFINED: return undefined;
-    case ffi.SCARD_PROTOCOL_T0: return Protocol.T0;
-    case ffi.SCARD_PROTOCOL_T1: return Protocol.T1;
-    case ffi.SCARD_PROTOCOL_RAW: return Protocol.RAW;
-    default: return undefined;
+    case ffi.SCARD_PROTOCOL_UNDEFINED:
+      return undefined;
+    case ffi.SCARD_PROTOCOL_T0:
+      return Protocol.T0;
+    case ffi.SCARD_PROTOCOL_T1:
+      return Protocol.T1;
+    case ffi.SCARD_PROTOCOL_RAW:
+      return Protocol.RAW;
+    default:
+      return undefined;
   }
 }
 

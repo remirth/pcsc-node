@@ -1,11 +1,12 @@
 import * as ffi from '@remirth/pcsc-sys';
 
-import { ShareMode, Protocols, Disposition, Protocol, Status, Attribute, protocolFromRaw } from './enums.js';
-import { Error, checkResult } from './error.js';
-import type { Context } from './context.js';
-import { Transaction } from './transaction.js';
-import { ReaderNames } from './reader.js';
 import { allocUint32, readUint32 } from './buffer.js';
+import type { Context } from './context.js';
+import type { ShareMode, Protocols, Status, Attribute } from './enums.js';
+import { Disposition, Protocol, protocolFromRaw } from './enums.js';
+import { Error, checkResult } from './error.js';
+import { ReaderNames } from './reader.js';
+import { Transaction } from './transaction.js';
 
 export interface CardStatus {
   readerNames: ReaderNames;
@@ -35,17 +36,23 @@ export class Card {
     return new Transaction(this);
   }
 
-  reconnect(shareMode: ShareMode, preferredProtocols: Protocols, initialization: Disposition): void {
+  reconnect(
+    shareMode: ShareMode,
+    preferredProtocols: Protocols,
+    initialization: Disposition,
+  ): void {
     const r = ffi.raw();
     const pdwActiveProtocol = allocUint32(0);
 
-    checkResult(r.SCardReconnect(
-      this.handle,
-      shareMode,
-      preferredProtocols,
-      initialization,
-      pdwActiveProtocol,
-    ));
+    checkResult(
+      r.SCardReconnect(
+        this.handle,
+        shareMode,
+        preferredProtocols,
+        initialization,
+        pdwActiveProtocol,
+      ),
+    );
 
     this.activeProtocol = protocolFromRaw(readUint32(pdwActiveProtocol, 0));
   }
@@ -62,15 +69,9 @@ export class Card {
     const rawProtocol = allocUint32(0);
     const atrLen = allocUint32(atrBuffer.length);
 
-    checkResult(r.SCardStatus(
-      this.handle,
-      namesBuffer,
-      readerLen,
-      rawStatus,
-      rawProtocol,
-      atrBuffer,
-      atrLen,
-    ));
+    checkResult(
+      r.SCardStatus(this.handle, namesBuffer, readerLen, rawStatus, rawProtocol, atrBuffer, atrLen),
+    );
 
     const readerLenVal = readUint32(readerLen, 0);
     const names = new ReaderNames(namesBuffer.subarray(0, readerLenVal));
@@ -88,15 +89,7 @@ export class Card {
     const readerLenBuf = allocUint32(0);
     const atrLenBuf = allocUint32(0);
 
-    const result = r.SCardStatus(
-      this.handle,
-      null,
-      readerLenBuf,
-      null,
-      null,
-      null,
-      atrLenBuf,
-    );
+    const result = r.SCardStatus(this.handle, null, readerLenBuf, null, null, null, atrLenBuf);
 
     if (result === Error.InsufficientBuffer) {
       return {
@@ -148,15 +141,17 @@ export class Card {
 
     const pciPtr = getPciPointer(this.activeProtocol);
 
-    checkResult(r.SCardTransmit(
-      this.handle,
-      pciPtr,
-      sendBuffer,
-      sendBuffer.length,
-      null,
-      recvBuffer,
-      recvLen,
-    ));
+    checkResult(
+      r.SCardTransmit(
+        this.handle,
+        pciPtr,
+        sendBuffer,
+        sendBuffer.length,
+        null,
+        recvBuffer,
+        recvLen,
+      ),
+    );
 
     const len = readUint32(recvLen, 0);
     return recvBuffer.subarray(0, len);
@@ -167,15 +162,17 @@ export class Card {
     const bytesReturned = allocUint32(0);
     const recvLen = recvBuffer ? recvBuffer.length : 0;
 
-    checkResult(r.SCardControl(
-      this.handle,
-      controlCode,
-      sendBuffer,
-      sendBuffer ? sendBuffer.length : 0,
-      recvBuffer,
-      recvLen,
-      bytesReturned,
-    ));
+    checkResult(
+      r.SCardControl(
+        this.handle,
+        controlCode,
+        sendBuffer,
+        sendBuffer ? sendBuffer.length : 0,
+        recvBuffer,
+        recvLen,
+        bytesReturned,
+      ),
+    );
 
     const len = readUint32(bytesReturned, 0);
     return recvBuffer ? recvBuffer.subarray(0, len) : Buffer.alloc(0);
@@ -189,9 +186,13 @@ export class Card {
 
 function getPciPointer(protocol: Protocol | undefined): bigint {
   switch (protocol) {
-    case Protocol.T0: return ffi.getT0Pci();
-    case Protocol.T1: return ffi.getT1Pci();
-    case Protocol.RAW: return ffi.getRawPci();
-    default: return ffi.getT0Pci();
+    case Protocol.T0:
+      return ffi.getT0Pci();
+    case Protocol.T1:
+      return ffi.getT1Pci();
+    case Protocol.RAW:
+      return ffi.getRawPci();
+    default:
+      return ffi.getT0Pci();
   }
 }

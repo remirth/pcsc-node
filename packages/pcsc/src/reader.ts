@@ -1,12 +1,7 @@
 import { getRawPointer } from '@remirth/pcsc-sys';
 
-import { State } from './enums.js';
-import {
-  createReaderStateBuffer,
-  readReaderStateAtr,
-  readUint32,
-  writeUint32,
-} from './buffer.js';
+import { createReaderStateBuffer, readReaderStateAtr, readUint32, writeUint32 } from './buffer.js';
+import type { State } from './enums.js';
 
 const RS_OFFSET_DWEVENTSTATE = 20;
 const RS_OFFSET_DWCURRENTSTATE = 16;
@@ -38,7 +33,7 @@ export class ReaderState {
   }
 
   get eventCount(): number {
-    return (this.eventState & 0xFFFF_0000) >>> 16;
+    return (this.eventState & 0xffff_0000) >>> 16;
   }
 
   syncCurrentState(): void {

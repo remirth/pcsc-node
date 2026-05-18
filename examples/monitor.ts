@@ -12,7 +12,7 @@ function main(): void {
     if (readersLen > 0) {
       const buf = Buffer.alloc(readersLen);
       const readers = ctx.listReaders(buf);
-      readerStates = [...readers].map(name => new ReaderState(name, State.UNAWARE));
+      readerStates = [...readers].map((name) => new ReaderState(name, State.UNAWARE));
     } else {
       readerStates = [];
     }

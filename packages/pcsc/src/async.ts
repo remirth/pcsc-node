@@ -1,5 +1,5 @@
+import type { Card, CardStatus } from './card.js';
 import { Context } from './context.js';
-import { Card } from './card.js';
 import type { Scope, ShareMode, Protocols } from './enums.js';
 import type { ReaderState } from './reader.js';
 
@@ -19,7 +19,9 @@ export class ContextAsync {
   private async lock<T>(fn: () => T): Promise<T> {
     const prev = this.mutex;
     let release: () => void;
-    this.mutex = new Promise<void>((resolve) => { release = resolve; });
+    this.mutex = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     await prev;
     try {
       return fn();
@@ -52,7 +54,11 @@ export class ContextAsync {
     return this.lock(() => this.ctx.listReadersOwned());
   }
 
-  async connect(reader: string, shareMode: ShareMode, preferredProtocols: Protocols): Promise<CardAsync> {
+  async connect(
+    reader: string,
+    shareMode: ShareMode,
+    preferredProtocols: Protocols,
+  ): Promise<CardAsync> {
     return this.lock(() => {
       const card = this.ctx.connect(reader, shareMode, preferredProtocols);
       return new CardAsync(card);
@@ -87,7 +93,11 @@ export class CardAsync {
     return this.card.transmit(sendBuffer, recvBuffer);
   }
 
-  async control(controlCode: number, sendBuffer: Buffer | null, recvBuffer: Buffer | null): Promise<Buffer> {
+  async control(
+    controlCode: number,
+    sendBuffer: Buffer | null,
+    recvBuffer: Buffer | null,
+  ): Promise<Buffer> {
     return this.card.control(controlCode, sendBuffer, recvBuffer);
   }
 
@@ -95,7 +105,7 @@ export class CardAsync {
     return this.card.getAttribute(attribute, buffer);
   }
 
-  async status(namesBuffer: Buffer, atrBuffer: Buffer): Promise<import('./card.js').CardStatus> {
+  async status(namesBuffer: Buffer, atrBuffer: Buffer): Promise<CardStatus> {
     return this.card.status(namesBuffer, atrBuffer);
   }
 

@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "insertFinalNewline": true,
+  "quoteProps": "as-needed",
+  "objectWrap": "preserve",
+  "sortImports": {
+    "internalPattern": ["@remirth/*"],
+    "groups": ["side_effect", "builtin", "external", "internal", "parent", "sibling", "unknown"]
+  },
+  "ignorePatterns": ["dist", "node_modules", "pnpm-lock.yaml", "*.tsbuildinfo"]
+}

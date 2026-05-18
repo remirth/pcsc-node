@@ -85,6 +85,15 @@ export class ReaderState {
   getRawPointer(): bigint {
     return getRawPointer(this.inner);
   }
+
+  /**
+   * Returns the underlying `SCARD_READERSTATE` struct buffer.
+   *
+   * Intended for internal use by {@link Context.getStatusChange}.
+   */
+  getInnerBuffer(): Buffer {
+    return this.inner;
+  }
 }
 
 /**

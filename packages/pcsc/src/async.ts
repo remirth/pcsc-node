@@ -68,7 +68,14 @@ export class ContextAsync {
     await this.lock(() => this.ctx.isValid());
   }
 
-  /** Cancel any ongoing blocking operation. */
+  /**
+   * Cancel any ongoing blocking operation.
+   *
+   * Unlike other methods, `cancel` bypasses the internal mutex so it
+   * can interrupt a blocking {@link Context.getStatusChange} that is
+   * currently holding the lock. This is safe because `SCardCancel` is
+   * designed to be called from another thread/context.
+   */
   cancel(): void {
     this.ctx.cancel();
   }

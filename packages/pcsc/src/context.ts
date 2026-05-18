@@ -19,7 +19,7 @@ import * as ffi from '@remirth/pcsc-sys';
 
 import { allocUint32, readUint32, READER_STATE_SIZE } from './buffer.js';
 import { Card } from './card.js';
-import { Scope, ShareMode, Protocols, Protocol, Protocol as ProtocolEnum } from './enums.js';
+import { Scope, ShareMode, Protocols, Protocol, protocolFromRaw } from './enums.js';
 import { Error, checkResult, errorFromRaw } from './error.js';
 import { ReaderNames } from './reader.js';
 import type { ReaderState } from './reader.js';
@@ -77,10 +77,7 @@ export class Context {
   release(): void {
     const r = ffi.raw();
     const result = r.SCardReleaseContext(this.handle);
-    if (result === ffi.SCARD_S_SUCCESS) {
-      return;
-    }
-    if (result === ffi.SCARD_E_CANT_DISPOSE) {
+    if (result !== ffi.SCARD_S_SUCCESS) {
       throw errorFromRaw(result);
     }
   }
@@ -229,7 +226,7 @@ export class Context {
 
     for (let i = 0; i < numReaders; i++) {
       const readerBuf = readers[i]!;
-      const src = readerBuf['inner' as keyof ReaderState] as unknown as Buffer;
+      const src = readerBuf.getInnerBuffer();
       src.copy(totalBuf, i * structSize);
     }
 
@@ -237,7 +234,7 @@ export class Context {
 
     for (let i = 0; i < numReaders; i++) {
       const readerBuf = readers[i]!;
-      const dest = readerBuf['inner' as keyof ReaderState] as unknown as Buffer;
+      const dest = readerBuf.getInnerBuffer();
       totalBuf.copy(dest, 0, i * structSize, (i + 1) * structSize);
     }
   }
@@ -256,19 +253,6 @@ export class Context {
    */
   [Symbol.dispose](): void {
     ffi.raw().SCardReleaseContext(this.handle);
-  }
-}
-
-function protocolFromRaw(raw: number): Protocol {
-  switch (raw) {
-    case ffi.SCARD_PROTOCOL_T0:
-      return ProtocolEnum.T0;
-    case ffi.SCARD_PROTOCOL_T1:
-      return ProtocolEnum.T1;
-    case ffi.SCARD_PROTOCOL_RAW:
-      return ProtocolEnum.RAW;
-    default:
-      return ProtocolEnum.T0;
   }
 }
 

@@ -21,6 +21,12 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
+  examples:
+    dependencies:
+      '@remirth/pcsc':
+        specifier: workspace:*
+        version: link:../packages/pcsc
+
   packages/pcsc:
     dependencies:
       '@remirth/pcsc-sys':

@@ -21,10 +21,6 @@ type NodeFfiType =
   | 'string';
 
 interface DynamicLibrary {
-  getFunction(
-    name: string,
-    signature: { parameters: NodeFfiType[]; result: NodeFfiType },
-  ): (...args: unknown[]) => unknown;
   getFunctions(
     definitions: Record<string, { parameters: NodeFfiType[]; result: NodeFfiType }>,
   ): Record<string, (...args: unknown[]) => unknown>;
@@ -64,14 +60,16 @@ function loadLibrary(
   for (const libraryName of getLibraryNames(ffi.suffix)) {
     try {
       const library = new ffi.DynamicLibrary(libraryName);
-      const functions = Object.fromEntries(
-        Object.entries(definitions).map(([name, def]) => [
-          name,
-          library.getFunction(def.symbol, {
+      const boundFunctions = library.getFunctions(
+        Object.fromEntries(
+          Object.values(definitions).map((def) => [def.symbol, {
             parameters: def.parameters as NodeFfiType[],
             result: def.result as NodeFfiType,
-          }),
-        ]),
+          }]),
+        ),
+      );
+      const functions = Object.fromEntries(
+        Object.entries(definitions).map(([name, def]) => [name, boundFunctions[def.symbol]!]),
       ) as unknown as SCardFunctions;
       return { library, functions };
     } catch (error) {

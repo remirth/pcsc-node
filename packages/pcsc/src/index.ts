@@ -49,13 +49,13 @@ export {
   scardCtlCode as ctl_code,
 } from '@remirth/pcsc-sys';
 
-export * from './error.js';
-export * from './enums.js';
-export * from './context.js';
-export * from './card.js';
-export * from './transaction.js';
-export * from './reader.js';
-export * from './buffer.js';
+export * from './error.ts';
+export * from './enums.ts';
+export * from './context.ts';
+export * from './card.ts';
+export * from './transaction.ts';
+export * from './reader.ts';
+export * from './buffer.ts';
 
 /**
  * Special reader name for detecting card reader insertions and removals.

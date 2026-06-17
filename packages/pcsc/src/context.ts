@@ -13,12 +13,12 @@
 
 import * as ffi from '@remirth/pcsc-sys';
 
-import { allocDword, readDword, READER_STATE_SIZE } from './buffer.js';
-import { Card } from './card.js';
-import { Scope, ShareMode, Protocols, Protocol, protocolFromRaw } from './enums.js';
-import { Error, checkResult, errorFromRaw } from './error.js';
-import { ReaderNames } from './reader.js';
-import type { ReaderState } from './reader.js';
+import { allocDword, readDword, READER_STATE_SIZE } from './buffer.ts';
+import { Card } from './card.ts';
+import { Scope, ShareMode, Protocols, Protocol, protocolFromRaw } from './enums.ts';
+import { Error, checkResult, errorFromRaw } from './error.ts';
+import { ReaderNames } from './reader.ts';
+import type { ReaderState } from './reader.ts';
 
 /**
  * Library context connected to the PC/SC service.

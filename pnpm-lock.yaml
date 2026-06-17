@@ -26,6 +26,9 @@ importers:
       '@remirth/pcsc':
         specifier: workspace:*
         version: link:../packages/pcsc
+      '@remirth/pcsc-sys':
+        specifier: workspace:*
+        version: link:../packages/pcsc-sys
 
   packages/pcsc:
     dependencies:

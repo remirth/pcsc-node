@@ -6,7 +6,7 @@ import {
   SCARDCONTEXT_TYPE,
   SCARDHANDLE_TYPE,
   type FfiPrimitiveType,
-} from '../types.js';
+} from '../types.ts';
 
 export function getLibraryNames(suffix: string): string[] {
   const sys = platform();

@@ -8,7 +8,7 @@
  * @module
  */
 
-import { getBackend, getBackendInfo, type SCardFunctions } from './backend.js';
+import { getBackend, getBackendInfo, type SCardFunctions } from './backend.ts';
 
 /* ------------------------------------------------------------------ */
 /*  Public API                                                        */

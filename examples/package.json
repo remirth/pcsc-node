@@ -3,9 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "smoke": "node --conditions=source ./backend-smoke.ts",
+    "cancel": "node --conditions=source ./cancel.ts",
+    "connect": "node --conditions=source ./connect.ts",
+    "list-readers": "node --conditions=source ./list-readers.ts",
+    "monitor": "node --conditions=source ./monitor.ts",
+    "poll-changes": "node --conditions=source ./poll-changes.ts"
   },
   "dependencies": {
-    "@remirth/pcsc": "workspace:*"
+    "@remirth/pcsc": "workspace:*",
+    "@remirth/pcsc-sys": "workspace:*"
   }
 }

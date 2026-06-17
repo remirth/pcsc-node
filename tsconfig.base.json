@@ -19,8 +19,7 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "erasableSyntaxOnly": true,
-    "esModuleInterop": false,
-    "allowImportingTsExtensions": false,
+    "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "skipLibCheck": true
   }

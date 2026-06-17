@@ -13,8 +13,8 @@ import {
   RS_OFFSET_DWCURRENTSTATE,
   RS_OFFSET_DWEVENTSTATE,
   writeDword,
-} from './buffer.js';
-import type { State } from './enums.js';
+} from './buffer.ts';
+import type { State } from './enums.ts';
 
 /**
  * Tracks the current state of a card reader.

@@ -9,13 +9,13 @@
  * @module
  */
 
-import * as constants from './constants.js';
-import { SCARD_CTL_CODE, SCARD_PROTOCOL_RAW } from './types.js';
+import * as constants from './constants.ts';
+import { SCARD_CTL_CODE, SCARD_PROTOCOL_RAW } from './types.ts';
 
-export * from './constants.js';
-export * from './types.js';
-export * from './bindings.js';
-export type { BackendInfo, BackendMode, BackendName } from './backend.js';
+export * from './constants.ts';
+export * from './types.ts';
+export * from './bindings.ts';
+export type { BackendInfo, BackendMode, BackendName } from './backend.ts';
 
 /** All PC/SC constants grouped under a single namespace. */
 export const ffi = {

@@ -6,13 +6,13 @@
 
 import * as ffi from '@remirth/pcsc-sys';
 
-import { allocDword, readDword } from './buffer.js';
-import type { Context } from './context.js';
-import { Disposition, Protocol, protocolFromRaw, statusFromRaw } from './enums.js';
-import type { Protocols, ShareMode, Status, Attribute } from './enums.js';
-import { Error, checkResult, errorFromRaw } from './error.js';
-import { ReaderNames } from './reader.js';
-import { Transaction } from './transaction.js';
+import { allocDword, readDword } from './buffer.ts';
+import type { Context } from './context.ts';
+import { Disposition, Protocol, protocolFromRaw, statusFromRaw } from './enums.ts';
+import type { Protocols, ShareMode, Status, Attribute } from './enums.ts';
+import { Error, checkResult, errorFromRaw } from './error.ts';
+import { ReaderNames } from './reader.ts';
+import { Transaction } from './transaction.ts';
 
 /**
  * Status information about a card in a reader.

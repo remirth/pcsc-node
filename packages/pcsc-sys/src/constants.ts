@@ -6,7 +6,7 @@
  * @module
  */
 
-import { isWindows } from './types.js';
+import { isWindows } from './types.ts';
 
 /* ------------------------------------------------------------------ */
 /*  Return codes                                                      */

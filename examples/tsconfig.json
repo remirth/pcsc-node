@@ -1,9 +1,13 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": ".",
-    "types": ["node"]
+    "rootDir": "..",
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@remirth/pcsc": ["../packages/pcsc/src/index.ts"],
+      "@remirth/pcsc-sys": ["../packages/pcsc-sys/src/index.ts"]
+    }
   },
   "include": ["*.ts"]
 }

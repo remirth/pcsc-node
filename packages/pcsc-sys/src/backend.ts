@@ -1,8 +1,8 @@
 import { createRequire } from 'node:module';
 
-import { createKoffiBackend } from './backends/koffi.js';
-import { createNodeFfiBackend } from './backends/node-ffi.js';
-import type { DWORD, LONG, RawCard, RawContext } from './types.js';
+import { createKoffiBackend } from './backends/koffi.ts';
+import { createNodeFfiBackend } from './backends/node-ffi.ts';
+import type { DWORD, LONG, RawCard, RawContext } from './types.ts';
 
 export type BackendName = 'node-ffi' | 'koffi';
 export type BackendMode = BackendName | 'auto';

@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 
-import type { PcscBackend, SCardFunctions } from '../backend.js';
-import { buildDefinitions, getLibraryNames } from './shared.js';
+import type { PcscBackend, SCardFunctions } from '../backend.ts';
+import { buildDefinitions, getLibraryNames } from './shared.ts';
 
 interface KoffiLib {
   func(signature: string): (...args: unknown[]) => unknown;

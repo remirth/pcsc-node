@@ -1,5 +1,5 @@
-import { getBackendInfo } from '#pcsc-sys';
-import { Context, Scope, errorMessage, errorFromRaw } from '#pcsc';
+import { getBackendInfo } from '@remirth/pcsc-sys';
+import { Context, Scope, errorMessage, errorFromRaw } from '@remirth/pcsc';
 
 function main(): void {
   try {

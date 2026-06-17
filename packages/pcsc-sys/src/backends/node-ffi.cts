@@ -22,7 +22,7 @@ type NodeFfiType =
 
 interface DynamicLibrary {
   getFunctions(
-    definitions: Record<string, { parameters: NodeFfiType[]; result: NodeFfiType }>,
+    definitions: Record<string, { arguments: NodeFfiType[]; return: NodeFfiType }>,
   ): Record<string, (...args: unknown[]) => unknown>;
   getSymbol(name: string): bigint;
 }
@@ -62,10 +62,13 @@ function loadLibrary(
       const library = new ffi.DynamicLibrary(libraryName);
       const boundFunctions = library.getFunctions(
         Object.fromEntries(
-          Object.values(definitions).map((def) => [def.symbol, {
-            parameters: def.parameters as NodeFfiType[],
-            result: def.result as NodeFfiType,
-          }]),
+          Object.values(definitions).map((def) => [
+            def.symbol,
+            {
+              arguments: def.parameters as NodeFfiType[],
+              return: def.result as NodeFfiType,
+            },
+          ]),
         ),
       );
       const functions = Object.fromEntries(

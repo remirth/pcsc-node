@@ -5,7 +5,7 @@ import { buildDefinitions, getLibraryNames } from './shared.ts';
 
 interface KoffiLib {
   func(signature: string): (...args: unknown[]) => unknown;
-  symbol(name: string): bigint;
+  symbol(name: string, type?: string): bigint;
 }
 
 interface KoffiModule {
@@ -25,7 +25,7 @@ export function createKoffiBackend(): PcscBackend {
   return {
     name: 'koffi',
     raw: () => functions,
-    resolveSymbol: (name: string) => lib.symbol(name),
+    resolveSymbol: (name: string) => resolveSymbol(lib, name),
     getRawPointer: (source: Buffer | ArrayBuffer) => koffi.address(source),
     toString(pointer: bigint) {
       if (pointer === 0n) {
@@ -46,6 +46,16 @@ export function createKoffiBackend(): PcscBackend {
       return copy ? Buffer.from(view) : view;
     },
   };
+}
+
+function resolveSymbol(lib: KoffiLib, name: string): bigint {
+  try {
+    return lib.symbol(name);
+  } catch {
+    // Koffi 2.x accepted a second type argument for symbol lookup and some
+    // builds still appear to require the 2-argument form.
+    return lib.symbol(name, 'void *');
+  }
 }
 
 function loadLibrary(

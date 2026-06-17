@@ -1,4 +1,4 @@
-import { Context, ReaderState, Scope, Error, State, PNP_NOTIFICATION } from '@remirth/pcsc';
+import { Context, ReaderState, Scope, Error, State, PNP_NOTIFICATION, isPCSCError } from '@remirth/pcsc';
 
 interface PollChange {
   reader: string;
@@ -16,10 +16,10 @@ function* poll(
     try {
       ctx.getStatusChange(timeout, readers);
     } catch (err: unknown) {
-      if (err === Error.Timeout) {
+      if (isPCSCError(err, Error.Timeout)) {
         continue;
       }
-      if (err === Error.Cancelled) {
+      if (isPCSCError(err, Error.Cancelled)) {
         return;
       }
       throw err;

@@ -16,7 +16,7 @@ import * as ffi from '@remirth/pcsc-sys';
 import { allocDword, readDword, READER_STATE_SIZE } from './buffer.ts';
 import { Card } from './card.ts';
 import { Scope, ShareMode, Protocols, Protocol, protocolFromRaw } from './enums.ts';
-import { Error, checkResult, errorFromRaw } from './error.ts';
+import { Error, checkResult, errorFromRaw, PCSCError } from './error.ts';
 import { ReaderNames } from './reader.ts';
 import type { ReaderState } from './reader.ts';
 
@@ -78,7 +78,7 @@ export class Context {
     const r = ffi.raw();
     const result = r.SCardReleaseContext(this.handle);
     if (result !== ffi.SCARD_S_SUCCESS) {
-      throw errorFromRaw(result);
+      throw new PCSCError(errorFromRaw(result));
     }
     this.released = true;
   }
@@ -269,7 +269,7 @@ export class Context {
 
   private ensureValidHandle(): void {
     if (this.released) {
-      throw Error.InvalidHandle;
+      throw new PCSCError(Error.InvalidHandle);
     }
   }
 }

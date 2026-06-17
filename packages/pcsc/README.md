@@ -162,10 +162,10 @@ import { Error, errorFromRaw, errorMessage } from '@remirth/pcsc';
 try {
   card.transmit(apdu, recvBuf);
 } catch (err) {
-  if (err === Error.NoSmartcard) {
+  if (isPCSCError(err, Error.NoSmartcard)) {
     /* ... */
   }
-  if (err === Error.Timeout) {
+  if (isPCSCError(err, Error.Timeout)) {
     /* ... */
   }
   console.error(errorMessage(err));

@@ -1,4 +1,4 @@
-import { Context, Scope, Error, State, ReaderState, PNP_NOTIFICATION } from '@remirth/pcsc';
+import { Context, Scope, Error, State, ReaderState, PNP_NOTIFICATION, isPCSCError } from '@remirth/pcsc';
 
 function main(): void {
   const ctx = Context.establish(Scope.User);
@@ -23,7 +23,7 @@ function main(): void {
       try {
         ctx.getStatusChange(null, readerStates);
       } catch (err: unknown) {
-        if (err === Error.Cancelled) break;
+        if (isPCSCError(err, Error.Cancelled)) break;
         throw err;
       }
 

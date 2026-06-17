@@ -10,7 +10,7 @@ import { allocDword, readDword } from './buffer.ts';
 import type { Context } from './context.ts';
 import { Disposition, Protocol, protocolFromRaw, statusFromRaw } from './enums.ts';
 import type { Protocols, ShareMode, Status, Attribute } from './enums.ts';
-import { Error, checkResult, errorFromRaw } from './error.ts';
+import { Error, checkResult, errorFromRaw, PCSCError } from './error.ts';
 import { ReaderNames } from './reader.ts';
 import { Transaction } from './transaction.ts';
 
@@ -114,7 +114,7 @@ export class Card {
     const r = ffi.raw();
     const result = r.SCardBeginTransaction(this.handle);
     if (result !== ffi.SCARD_S_SUCCESS) {
-      throw [this, errorFromRaw(result)] as const;
+      throw [this, new PCSCError(errorFromRaw(result))] as const;
     }
     return new Transaction(this);
   }
@@ -402,7 +402,7 @@ export class Card {
     );
 
     if (result !== ffi.SCARD_S_SUCCESS) {
-      throw [errorFromRaw(result), readDword(recvLen, 0)] as const;
+      throw [new PCSCError(errorFromRaw(result)), readDword(recvLen, 0)] as const;
     }
 
     const len = readDword(recvLen, 0);
@@ -460,7 +460,7 @@ export class Card {
 
   private ensureConnected(): void {
     if (this.disconnected) {
-      throw Error.InvalidHandle;
+      throw new PCSCError(Error.InvalidHandle);
     }
   }
 }

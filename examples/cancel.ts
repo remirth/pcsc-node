@@ -1,4 +1,4 @@
-import { Context, Scope, Error, State, ReaderState, PNP_NOTIFICATION } from '@remirth/pcsc';
+import { Context, Scope, Error, State, ReaderState, PNP_NOTIFICATION, isPCSCError } from '@remirth/pcsc';
 
 function main(): void {
   const ctx = Context.establish(Scope.User);
@@ -11,9 +11,9 @@ function main(): void {
       ctx.getStatusChange(60000, readerStates);
       console.log('Blocking call exited normally.');
     } catch (err: unknown) {
-      if (err === Error.Cancelled) {
+      if (isPCSCError(err, Error.Cancelled)) {
         console.log('Blocking call was cancelled.');
-      } else if (err === Error.Timeout) {
+      } else if (isPCSCError(err, Error.Timeout)) {
         console.log('Blocking call timed out.');
       } else {
         throw err;

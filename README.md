@@ -43,7 +43,7 @@ let card;
 try {
   card = ctx.connect(reader, ShareMode.Shared, Protocols.ANY);
 } catch (err) {
-  if (err === Error.NoSmartcard) {
+  if (isPCSCError(err, Error.NoSmartcard)) {
     console.log('No smart card present.');
     ctx.release();
     process.exit(0);
@@ -147,10 +147,10 @@ Errors are thrown as numeric codes matching the PC/SC error constants:
 try {
   ctx.connect(reader, ShareMode.Shared, Protocols.ANY);
 } catch (err) {
-  if (err === Error.NoSmartcard) {
+  if (isPCSCError(err, Error.NoSmartcard)) {
     /* ... */
   }
-  if (err === Error.SharingViolation) {
+  if (isPCSCError(err, Error.SharingViolation)) {
     /* ... */
   }
   console.log(errorMessage(err));

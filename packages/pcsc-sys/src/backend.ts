@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 
 import { createKoffiBackend } from './backends/koffi.ts';
 import { createNodeFfiBackend } from './backends/node-ffi.ts';
+import { isMacOS, isWindows } from './types.ts';
 import type { DWORD, LONG, RawCard, RawContext } from './types.ts';
 
 export type BackendName = 'node-ffi' | 'koffi';
@@ -189,9 +190,13 @@ function getBackendMode(): BackendMode {
 function detectAvailability(): { nodeFfiAvailable: boolean; koffiAvailable: boolean } {
   const require = createRequire(import.meta.url);
   return {
-    nodeFfiAvailable: canLoad(require, 'node:ffi'),
+    nodeFfiAvailable: isNodeFfiSupportedOnCurrentPlatform() && canLoad(require, 'node:ffi'),
     koffiAvailable: canLoad(require, 'koffi'),
   };
+}
+
+function isNodeFfiSupportedOnCurrentPlatform(): boolean {
+  return isWindows || isMacOS;
 }
 
 function canLoad(require: NodeJS.Require, specifier: string): boolean {

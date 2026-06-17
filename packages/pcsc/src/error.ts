@@ -85,6 +85,17 @@ export const Error = {
 /** A PC/SC error code value. */
 export type Error = (typeof Error)[keyof typeof Error];
 
+/** Error object thrown by high-level PC/SC operations. */
+export class PCSCError extends globalThis.Error {
+  readonly code: Error;
+
+  constructor(code: Error) {
+    super(errorMessage(code));
+    this.name = 'PCSCError';
+    this.code = code;
+  }
+}
+
 const ERROR_MESSAGES: Record<number, string> = {
   [Error.InternalError]: 'An internal consistency check failed',
   [Error.Cancelled]: 'The action was cancelled by an SCardCancel request',
@@ -193,6 +204,14 @@ export function errorMessage(error: Error): string {
 }
 
 /**
+ * Test whether a thrown value is a {@link PCSCError}, optionally matching a
+ * specific PC/SC error code.
+ */
+export function isPCSCError(error: unknown, code?: Error): error is PCSCError {
+  return error instanceof PCSCError && (code === undefined || error.code === code);
+}
+
+/**
  * Assert that a PC/SC call succeeded.
  *
  * Throws the corresponding {@link Error} value if `result` is not
@@ -203,6 +222,6 @@ export function errorMessage(error: Error): string {
  */
 export function checkResult(result: number): void {
   if (result !== ffi.SCARD_S_SUCCESS) {
-    throw errorFromRaw(result);
+    throw new PCSCError(errorFromRaw(result));
   }
 }

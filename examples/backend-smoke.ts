@@ -1,5 +1,5 @@
 import { getBackendInfo } from '@remirth/pcsc-sys';
-import { Context, Scope, errorMessage, errorFromRaw } from '@remirth/pcsc';
+import { Context, Scope, isPCSCError } from '@remirth/pcsc';
 
 function main(): void {
   try {
@@ -13,9 +13,8 @@ function main(): void {
     const readerLen = ctx.listReadersLen();
     console.log('Reader list buffer length:', readerLen);
   } catch (error) {
-    if (typeof error === 'number') {
-      const code = errorFromRaw(error);
-      console.error(`PC/SC error: 0x${error.toString(16)} (${errorMessage(code)})`);
+    if (isPCSCError(error)) {
+      console.error(`PC/SC error: 0x${error.code.toString(16)} (${error.message})`);
       process.exitCode = 1;
       return;
     }

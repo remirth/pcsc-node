@@ -6,6 +6,7 @@ import {
   Error,
   MAX_BUFFER_SIZE,
   Disposition,
+  isPCSCError,
 } from '@remirth/pcsc';
 
 function main(): void {
@@ -32,7 +33,7 @@ function main(): void {
     try {
       card = ctx.connect(firstReader, ShareMode.Shared, Protocols.ANY);
     } catch (err: unknown) {
-      if (err === Error.NoSmartcard) {
+      if (isPCSCError(err, Error.NoSmartcard)) {
         console.log('A smartcard is not present in the reader.');
         return;
       }

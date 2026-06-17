@@ -1,7 +1,7 @@
-const { buildDefinitions, getLibraryNames } = require('./shared.js') as typeof import('./shared.js');
+import { createRequire } from 'node:module';
 
-type PcscBackend = import('../backend.js').PcscBackend;
-type SCardFunctions = import('../backend.js').SCardFunctions;
+import type { PcscBackend, SCardFunctions } from '../backend.js';
+import { buildDefinitions, getLibraryNames } from './shared.js';
 
 type NodeFfiType =
   | 'void'
@@ -35,7 +35,8 @@ interface NodeFfiModule {
   getRawPointer(source: Buffer | ArrayBuffer): bigint;
 }
 
-function createNodeFfiBackend(): PcscBackend {
+export function createNodeFfiBackend(): PcscBackend {
+  const require = createRequire(import.meta.url);
   const ffi = require('node:ffi') as NodeFfiModule;
 
   const definitions = buildDefinitions();
@@ -82,5 +83,3 @@ function loadLibrary(
 
   throw new AggregateError(errors, 'Failed to load PC/SC library with node:ffi');
 }
-
-module.exports = { createNodeFfiBackend };

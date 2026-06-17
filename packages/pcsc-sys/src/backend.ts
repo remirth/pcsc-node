@@ -1,5 +1,7 @@
 import { createRequire } from 'node:module';
 
+import { createKoffiBackend } from './backends/koffi.js';
+import { createNodeFfiBackend } from './backends/node-ffi.js';
 import type { DWORD, LONG, RawCard, RawContext } from './types.js';
 
 export type BackendName = 'node-ffi' | 'koffi';
@@ -202,17 +204,9 @@ function canLoad(require: NodeJS.Require, specifier: string): boolean {
 }
 
 function loadNodeFfiBackend(): PcscBackend {
-  const require = createRequire(import.meta.url);
-  const mod = require('./backends/node-ffi.cjs') as {
-    createNodeFfiBackend(): PcscBackend;
-  };
-  return mod.createNodeFfiBackend();
+  return createNodeFfiBackend();
 }
 
 function loadKoffiBackend(): PcscBackend {
-  const require = createRequire(import.meta.url);
-  const mod = require('./backends/koffi.cjs') as {
-    createKoffiBackend(): PcscBackend;
-  };
-  return mod.createKoffiBackend();
+  return createKoffiBackend();
 }

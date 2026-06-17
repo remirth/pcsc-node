@@ -1,7 +1,7 @@
-const { buildDefinitions, getLibraryNames } = require('./shared.js') as typeof import('./shared.js');
+import { createRequire } from 'node:module';
 
-type PcscBackend = import('../backend.js').PcscBackend;
-type SCardFunctions = import('../backend.js').SCardFunctions;
+import type { PcscBackend, SCardFunctions } from '../backend.js';
+import { buildDefinitions, getLibraryNames } from './shared.js';
 
 interface KoffiLib {
   func(signature: string): (...args: unknown[]) => unknown;
@@ -15,7 +15,8 @@ interface KoffiModule {
   address(value: Buffer | ArrayBuffer): bigint;
 }
 
-function createKoffiBackend(): PcscBackend {
+export function createKoffiBackend(): PcscBackend {
+  const require = createRequire(import.meta.url);
   const koffi = require('koffi') as KoffiModule;
 
   const definitions = buildDefinitions();
@@ -68,7 +69,10 @@ function loadLibrary(
   throw new AggregateError(errors, 'Failed to load PC/SC library with koffi');
 }
 
-function toPrototype(name: string, definition: { parameters: string[]; result: string }): string {
+function toPrototype(
+  name: string,
+  definition: { parameters: string[]; result: string },
+): string {
   const params = definition.parameters
     .map((param, index) => `${toKoffiType(param)} arg${index}`)
     .join(', ');
@@ -93,5 +97,3 @@ function toKoffiType(type: string): string {
       return type;
   }
 }
-
-module.exports = { createKoffiBackend };

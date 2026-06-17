@@ -2,7 +2,7 @@
 
 Low-level FFI bindings to the PC/SC C API for Node.js.
 
-This package directly wraps the native PC/SC library (`libpcsclite`, `PCSC.framework`, `WinSCard.dll`) using the Node.js 26 experimental `node:ffi` module. It exports raw C constants, platform-specific types, and typed function wrappers. Most users should use [`@remirth/pcsc`](../pcsc/) instead, which provides a safe, high-level API on top of this package.
+This package directly wraps the native PC/SC library (`libpcsclite`, `PCSC.framework`, `WinSCard.dll`) using a pluggable FFI backend. It exports raw C constants, platform-specific types, typed function wrappers, and backend diagnostics. Most users should use [`@remirth/pcsc`](../pcsc/) instead, which provides a safe, high-level API on top of this package.
 
 ## Installation
 
@@ -10,17 +10,23 @@ This package directly wraps the native PC/SC library (`libpcsclite`, `PCSC.frame
 pnpm add @remirth/pcsc-sys
 ```
 
-Requires Node.js >= 26 with the `--experimental-ffi` flag.
+Requires either Node.js >= 26 with `--experimental-ffi`, or `koffi` installed in the consumer project.
+
+Backend selection:
+
+- `PCSC_FFI_BACKEND=auto` (default) prefers `node:ffi`, then falls back to `koffi`
+- `PCSC_FFI_BACKEND=node-ffi` forces the Node experimental backend
+- `PCSC_FFI_BACKEND=koffi` forces Koffi
 
 ## Platform detection
 
 The library is loaded automatically at runtime based on the host platform:
 
-| Platform | Library |
-|---|---|
-| Linux / BSD | `libpcsclite.so` |
-| macOS | `/System/Library/Frameworks/PCSC.framework/PCSC` |
-| Windows | `WinSCard.dll` |
+| Platform    | Library                                          |
+| ----------- | ------------------------------------------------ |
+| Linux / BSD | `libpcsclite.so`                                 |
+| macOS       | `/System/Library/Frameworks/PCSC.framework/PCSC` |
+| Windows     | `WinSCard.dll`                                   |
 
 On Linux you can override the library name and search path via environment variables:
 
@@ -46,12 +52,13 @@ fn.SCardTransmit(card, pciPtr, sendBuf, sendLen, null, recvBuf, recvLen);
 
 Each function returns the raw `LONG` status code. Use `SCARD_S_SUCCESS` to check for success.
 
-### Library handle
+### Backend info
 
 ```ts
-import { getLibrary, resolveSymbol } from '@remirth/pcsc-sys';
+import { getBackendInfo, resolveSymbol } from '@remirth/pcsc-sys';
 
-const lib = getLibrary();
+const info = getBackendInfo();
+console.log(info.selected); // 'node-ffi' | 'koffi'
 const addr = resolveSymbol('SCardTransmit'); // bigint
 ```
 
@@ -60,8 +67,8 @@ const addr = resolveSymbol('SCardTransmit'); // bigint
 ```ts
 import { getT0Pci, getT1Pci, getRawPci } from '@remirth/pcsc-sys';
 
-const t0 = getT0Pci();   // bigint — address of g_rgSCardT0Pci
-const t1 = getT1Pci();   // bigint — address of g_rgSCardT1Pci
+const t0 = getT0Pci(); // bigint — address of g_rgSCardT0Pci
+const t1 = getT1Pci(); // bigint — address of g_rgSCardT1Pci
 const raw = getRawPci(); // bigint — address of g_rgSCardRawPci
 ```
 
@@ -70,9 +77,9 @@ const raw = getRawPci(); // bigint — address of g_rgSCardRawPci
 ```ts
 import { toString, toBuffer, getRawPointer } from '@remirth/pcsc-sys';
 
-const str = toString(ptr);        // read NUL-terminated UTF-8
-const buf = toBuffer(ptr, len);   // copy native memory to Buffer
-const raw = getRawPointer(buf);   // get raw pointer from Buffer
+const str = toString(ptr); // read NUL-terminated UTF-8
+const buf = toBuffer(ptr, len); // copy native memory to Buffer
+const raw = getRawPointer(buf); // get raw pointer from Buffer
 ```
 
 ### Types

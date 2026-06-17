@@ -1,4 +1,12 @@
-import { Context, Scope, ShareMode, Protocols, Error, MAX_BUFFER_SIZE } from '@remirth/pcsc';
+import {
+  Context,
+  Scope,
+  ShareMode,
+  Protocols,
+  Error,
+  MAX_BUFFER_SIZE,
+  Disposition,
+} from '@remirth/pcsc';
 
 function main(): void {
   const ctx = Context.establish(Scope.User);
@@ -40,7 +48,7 @@ function main(): void {
       const rapdu = card.transmit(apdu, rapduBuf);
       console.log('APDU response:', rapdu);
     } finally {
-      card.disconnect(0);
+      card.disconnect(Disposition.LeaveCard);
     }
   } finally {
     ctx.release();

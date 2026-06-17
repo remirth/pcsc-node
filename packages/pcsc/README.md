@@ -2,7 +2,7 @@
 
 High-level, safe TypeScript bindings to the PC/SC API for smart card communication.
 
-Wraps [`@remirth/pcsc-sys`](../pcsc-sys/) with an ergonomic API modelled after the [pcsc-rust](https://github.com/bluetech/pcsc-rust) crate. Built on the Node.js 26 experimental `node:ffi` module.
+Wraps [`@remirth/pcsc-sys`](../pcsc-sys/) with an ergonomic API modelled after the [pcsc-rust](https://github.com/bluetech/pcsc-rust) crate.
 
 ## Installation
 
@@ -10,21 +10,20 @@ Wraps [`@remirth/pcsc-sys`](../pcsc-sys/) with an ergonomic API modelled after t
 pnpm add @remirth/pcsc
 ```
 
-Requires Node.js >= 26 with the `--experimental-ffi` flag.
+Requires either Node.js >= 26 with `--experimental-ffi`, or `koffi` installed in the project.
 
 ## Quick start
 
 ```ts
-import {
-  Context, Scope, ShareMode, Protocols, Error,
-  MAX_BUFFER_SIZE,
-} from '@remirth/pcsc';
+import { Context, Scope, ShareMode, Protocols, Error, MAX_BUFFER_SIZE } from '@remirth/pcsc';
 
 const ctx = Context.establish(Scope.User);
 const readers = ctx.listReadersOwned();
 const card = ctx.connect(readers[0]!, ShareMode.Shared, Protocols.ANY);
 
-const apdu = Buffer.from([0x00, 0xA4, 0x04, 0x00, 0x0A, 0xA0, 0x00, 0x00, 0x00, 0x62, 0x03, 0x01, 0x0C, 0x06, 0x01]);
+const apdu = Buffer.from([
+  0x00, 0xa4, 0x04, 0x00, 0x0a, 0xa0, 0x00, 0x00, 0x00, 0x62, 0x03, 0x01, 0x0c, 0x06, 0x01,
+]);
 const recv = Buffer.alloc(MAX_BUFFER_SIZE);
 const response = card.transmit(apdu, recv);
 console.log('Response:', response);
@@ -49,17 +48,17 @@ import { Context, Scope } from '@remirth/pcsc';
 const ctx = Context.establish(Scope.User);
 
 // List readers
-ctx.listReadersOwned();                    // string[]
-const len = ctx.listReadersLen();          // number
+ctx.listReadersOwned(); // string[]
+const len = ctx.listReadersLen(); // number
 const buf = Buffer.alloc(len);
-const names = ctx.listReaders(buf);        // ReaderNames (iterable)
+const names = ctx.listReaders(buf); // ReaderNames (iterable)
 
 // Connect to a card
 const card = ctx.connect('Reader Name 0', ShareMode.Shared, Protocols.ANY);
 
 // Blocking state monitoring
 const states = [new ReaderState('Reader 0', State.UNAWARE)];
-ctx.getStatusChange(5000, states);         // 5s timeout, null = infinite
+ctx.getStatusChange(5000, states); // 5s timeout, null = infinite
 
 // Cancel a blocking call (from another context)
 ctx.cancel();
@@ -96,11 +95,11 @@ card.getAttribute(Attribute.AtrString, buf);
 card.setAttribute(Attribute.SupressT1IfsRequest, data);
 
 // Card status
-const { namesLen, atrLen } = card.statusLen();
-const namesBuf = Buffer.alloc(namesLen);
+const { readerLen, atrLen } = card.status2Len();
+const namesBuf = Buffer.alloc(readerLen);
 const atrBuf = Buffer.alloc(atrLen);
-const status = card.status(namesBuf, atrBuf);
-// status.readerNames, status.status, status.protocol, status.atr
+const status = card.status2(namesBuf, atrBuf);
+// status.readerNames, status.status, status.protocol2(), status.protocol(), status.atr
 
 // Reconnect / disconnect
 card.reconnect(ShareMode.Exclusive, Protocols.T1, Disposition.ResetCard);
@@ -115,7 +114,7 @@ Exclusive access to a card.
 
 ```ts
 using tx = card.transaction();
-const response = tx.getCard().transmit(apdu, recvBuf);
+const response = tx.transmit(apdu, recvBuf);
 // transaction automatically ended with LeaveCard
 
 // Manual control
@@ -128,16 +127,18 @@ tx.reconnect(ShareMode.Shared, Protocols.ANY, Disposition.ResetCard);
 Tracks reader and card state for `getStatusChange`.
 
 ```ts
-import { ReaderState, State } from '@remirth/pcsc';
+import { ReaderState, State, PNP_NOTIFICATION } from '@remirth/pcsc';
 
 const rs = new ReaderState('Reader Name 0', State.UNAWARE);
 ctx.getStatusChange(null, [rs]);
 
-rs.name;          // string
-rs.eventState;    // State (bitmask)
-rs.currentState;  // State
-rs.eventCount;    // number
-rs.atr;           // Buffer (ATR bytes)
+const pnp = new ReaderState(PNP_NOTIFICATION(), State.UNAWARE);
+
+rs.name; // string
+rs.eventState; // State (bitmask)
+rs.currentState; // State
+rs.eventCount; // number
+rs.atr; // Buffer (ATR bytes)
 rs.syncCurrentState();
 ```
 
@@ -147,7 +148,9 @@ Iterator over NUL-separated reader name strings.
 
 ```ts
 const names = ctx.listReaders(buf);
-for (const name of names) { /* ... */ }
+for (const name of names) {
+  /* ... */
+}
 const all = names.collect(); // string[]
 ```
 
@@ -159,13 +162,17 @@ import { Error, errorFromRaw, errorMessage } from '@remirth/pcsc';
 try {
   card.transmit(apdu, recvBuf);
 } catch (err) {
-  if (err === Error.NoSmartcard) { /* ... */ }
-  if (err === Error.Timeout) { /* ... */ }
+  if (err === Error.NoSmartcard) {
+    /* ... */
+  }
+  if (err === Error.Timeout) {
+    /* ... */
+  }
   console.error(errorMessage(err));
 }
 
 // Convert raw LONG to Error
-const err = errorFromRaw(0x8010000C); // Error.NoSmartcard
+const err = errorFromRaw(0x8010000c); // Error.NoSmartcard
 ```
 
 ### Enums and constants
@@ -182,19 +189,14 @@ Attribute.VendorName | Attribute.AtrString | ...               (attribute IDs)
 AttributeClass.VendorInfo | AttributeClass.Protocol | ...      (attribute categories)
 ```
 
-### Async wrapper
+## Backend selection
 
-```ts
-import { ContextAsync } from '@remirth/pcsc';
+`@remirth/pcsc-sys` chooses an FFI backend automatically:
 
-const ctx = ContextAsync.establish(Scope.User);
-const readers = await ctx.listReadersOwned();
-const card = await ctx.connect(readers[0]!, ShareMode.Shared, Protocols.ANY);
-const response = await card.transmit(apdu, recvBuf);
-await ctx.release();
-```
+- `node:ffi` if available
+- otherwise `koffi` if installed
 
-Operations are serialised through an internal mutex so concurrent calls on the same context do not interleave. **Note:** blocking calls like `getStatusChange` still block the event loop. Offload to a worker thread for non-blocking behaviour.
+You can override this with `PCSC_FFI_BACKEND=node-ffi|koffi|auto`.
 
 ## Thread safety
 

@@ -23,9 +23,8 @@
  * ## Blocking operations
  *
  * The synchronous API (e.g. {@link Context.getStatusChange}) blocks
- * the Node.js event loop. Use {@link ContextAsync} for serialised
- * access, or offload blocking calls to a worker thread for true
- * concurrency.
+ * the Node.js event loop. Offload blocking calls to a worker thread
+ * for true concurrency.
  *
  * Run with the experimental FFI flag:
  * ```sh
@@ -45,7 +44,9 @@ export {
   SCARD_E_TIMEOUT,
   SCARD_E_NO_READERS_AVAILABLE,
   SCARD_E_INSUFFICIENT_BUFFER,
+  ffi,
   scardCtlCode as ctlCode,
+  scardCtlCode as ctl_code,
 } from '@remirth/pcsc-sys';
 
 export * from './error.js';
@@ -54,7 +55,6 @@ export * from './context.js';
 export * from './card.js';
 export * from './transaction.js';
 export * from './reader.js';
-export * from './async.js';
 export * from './buffer.js';
 
 /**
@@ -63,4 +63,6 @@ export * from './buffer.js';
  * Pass this as the reader name to {@link ReaderState} and use with
  * {@link Context.getStatusChange} to monitor plug-and-play events.
  */
-export const PNP_NOTIFICATION = '\\\\?PnP?\\Notification' as const;
+export function PNP_NOTIFICATION(): string {
+  return '\\\\?PnP?\\Notification';
+}

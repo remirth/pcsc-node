@@ -6,9 +6,9 @@
 
 import * as ffi from '@remirth/pcsc-sys';
 
-import type { Card } from './card.js';
+import type { Card, CardStatus, CardStatusOwned } from './card.js';
 import { Disposition } from './enums.js';
-import type { ShareMode, Protocols } from './enums.js';
+import type { ShareMode, Protocols, Attribute } from './enums.js';
 import { checkResult } from './error.js';
 
 /**
@@ -24,7 +24,7 @@ import { checkResult } from './error.js';
  * @example
  * ```ts
  * using tx = card.transaction();
- * const response = tx.getCard().transmit(apdu, recvBuf);
+ * const response = tx.transmit(apdu, recvBuf);
  * // Transaction is automatically ended here (LeaveCard).
  * ```
  */
@@ -44,6 +44,7 @@ export class Transaction {
    * performed through this reference.
    */
   getCard(): Card {
+    this.ensureActive();
     return this.card;
   }
 
@@ -60,9 +61,9 @@ export class Transaction {
    */
   end(disposition: Disposition): void {
     if (this.ended) return;
-    this.ended = true;
     const r = ffi.raw();
     checkResult(r.SCardEndTransaction(this.card.getRawHandle(), disposition));
+    this.ended = true;
   }
 
   /**
@@ -75,7 +76,63 @@ export class Transaction {
     preferredProtocols: Protocols,
     initialization: Disposition,
   ): void {
+    this.ensureActive();
     this.card.reconnect(shareMode, preferredProtocols, initialization);
+  }
+
+  transmit(sendBuffer: Buffer, recvBuffer: Buffer): Buffer {
+    this.ensureActive();
+    return this.card.transmit(sendBuffer, recvBuffer);
+  }
+
+  transmit2(sendBuffer: Buffer, recvBuffer: Buffer): Buffer {
+    this.ensureActive();
+    return this.card.transmit2(sendBuffer, recvBuffer);
+  }
+
+  control(controlCode: number, sendBuffer: Buffer | null, recvBuffer: Buffer | null): Buffer {
+    this.ensureActive();
+    return this.card.control(controlCode, sendBuffer, recvBuffer);
+  }
+
+  status(): { status: number; protocol: number } {
+    this.ensureActive();
+    return this.card.status();
+  }
+
+  status2(namesBuffer: Buffer, atrBuffer: Buffer): CardStatus {
+    this.ensureActive();
+    return this.card.status2(namesBuffer, atrBuffer);
+  }
+
+  status2Len(): { readerLen: number; atrLen: number } {
+    this.ensureActive();
+    return this.card.status2Len();
+  }
+
+  status2Owned(): CardStatusOwned {
+    this.ensureActive();
+    return this.card.status2Owned();
+  }
+
+  getAttribute(attribute: Attribute, buffer: Buffer): Buffer {
+    this.ensureActive();
+    return this.card.getAttribute(attribute, buffer);
+  }
+
+  getAttributeLen(attribute: Attribute): number {
+    this.ensureActive();
+    return this.card.getAttributeLen(attribute);
+  }
+
+  getAttributeOwned(attribute: Attribute): Buffer {
+    this.ensureActive();
+    return this.card.getAttributeOwned(attribute);
+  }
+
+  setAttribute(attribute: Attribute, data: Buffer): void {
+    this.ensureActive();
+    this.card.setAttribute(attribute, data);
   }
 
   /**
@@ -84,5 +141,11 @@ export class Transaction {
    */
   [Symbol.dispose](): void {
     this.end(Disposition.LeaveCard);
+  }
+
+  private ensureActive(): void {
+    if (this.ended) {
+      throw new TypeError('Transaction has already ended');
+    }
   }
 }

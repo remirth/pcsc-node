@@ -1,11 +1,12 @@
 /**
  * PC/SC C API numeric constants.
  *
- * Mirrors the constants defined in the pcsclite / WinSCard headers.
- * Values are the same across all platforms unless otherwise noted.
+ * Mirrors the constants defined by upstream `pcsc-sys`.
  *
  * @module
  */
+
+import { isWindows } from './types.js';
 
 /* ------------------------------------------------------------------ */
 /*  Return codes                                                      */
@@ -159,7 +160,7 @@ export const SCARD_E_NO_KEY_CONTAINER = 0x8010_0030;
 export const SCARD_E_SERVER_TOO_BUSY = 0x8010_0031;
 
 /** This smart card does not support the requested feature. (Value shared with `SCARD_E_UNEXPECTED` on non-Windows.) */
-export const SCARD_E_UNSUPPORTED_FEATURE = 0x8010_001f;
+export const SCARD_E_UNSUPPORTED_FEATURE = isWindows ? 0x8010_0022 : 0x8010_001f;
 
 /** The reader cannot communicate with the card (ATR string configuration conflict). */
 export const SCARD_W_UNSUPPORTED_CARD = 0x8010_0065;
@@ -274,6 +275,27 @@ export const SCARD_EJECT_CARD = 0x0003;
 /*  Reader states                                                     */
 /* ------------------------------------------------------------------ */
 
+/** Unknown card status. Bitmask on non-Windows, ordinal on Windows. */
+export const SCARD_UNKNOWN = isWindows ? 0 : 0x0001;
+
+/** No card present. Bitmask on non-Windows, ordinal on Windows. */
+export const SCARD_ABSENT = isWindows ? 1 : 0x0002;
+
+/** Card present. Bitmask on non-Windows, ordinal on Windows. */
+export const SCARD_PRESENT = isWindows ? 2 : 0x0004;
+
+/** Card present in reader, position uncertain. Bitmask on non-Windows, ordinal on Windows. */
+export const SCARD_SWALLOWED = isWindows ? 3 : 0x0008;
+
+/** Card powered. Bitmask on non-Windows, ordinal on Windows. */
+export const SCARD_POWERED = isWindows ? 4 : 0x0010;
+
+/** Negotiable protocol active. Bitmask on non-Windows, ordinal on Windows. */
+export const SCARD_NEGOTIABLE = isWindows ? 5 : 0x0020;
+
+/** Specific protocol active. Bitmask on non-Windows, ordinal on Windows. */
+export const SCARD_SPECIFIC = isWindows ? 6 : 0x0040;
+
 /** Application is unaware of the current state. */
 export const SCARD_STATE_UNAWARE = 0x0000;
 
@@ -326,6 +348,9 @@ export const INFINITE = 0xffff_ffff;
 
 /** Maximum size of an ATR (Answer To Reset) in bytes (33). */
 export const MAX_ATR_SIZE = 33;
+
+/** Size of the ATR buffer in `SCARD_READERSTATE`. */
+export const ATR_BUFFER_SIZE = isWindows ? 36 : MAX_ATR_SIZE;
 
 /** Alias for `MAX_ATR_SIZE`. */
 export const SCARD_ATR_LENGTH = MAX_ATR_SIZE;

@@ -5,10 +5,6 @@
  * methods for listing readers, connecting to cards, and monitoring reader
  * state changes.
  *
- * Contexts are reference-counted — cloning a context (via normal assignment)
- * shares the underlying native handle, and the handle is released only when
- * the last reference is dropped.
- *
  * Implements `Symbol.dispose` for use with
  * {@link https://github.com/tc39/proposal-explicit-resource-management | explicit resource management} (`using`).
  *
@@ -17,7 +13,7 @@
 
 import * as ffi from '@remirth/pcsc-sys';
 
-import { allocUint32, readUint32, READER_STATE_SIZE } from './buffer.js';
+import { allocDword, readDword, READER_STATE_SIZE } from './buffer.js';
 import { Card } from './card.js';
 import { Scope, ShareMode, Protocols, Protocol, protocolFromRaw } from './enums.js';
 import { Error, checkResult, errorFromRaw } from './error.js';
@@ -38,9 +34,11 @@ import type { ReaderState } from './reader.js';
  */
 export class Context {
   private handle: ffi.RawContext;
+  private released: boolean;
 
   private constructor(handle: ffi.RawContext) {
     this.handle = handle;
+    this.released = false;
   }
 
   /**
@@ -54,10 +52,10 @@ export class Context {
    * @throws Any {@link Error} on failure.
    */
   static establish(scope: Scope): Context {
-    const phCtx = Buffer.alloc(8);
+    const phCtx = Buffer.alloc(ffi.SCARDCONTEXT_SIZE);
     const r = ffi.raw();
     checkResult(r.SCardEstablishContext(scope, null, null, phCtx));
-    const handle = ffi.isWindows ? phCtx.readBigUInt64LE(0) : phCtx.readInt32LE(0);
+    const handle = ffi.readRawContext(phCtx);
     return new Context(handle);
   }
 
@@ -72,14 +70,17 @@ export class Context {
    * releases the context. Call this only if you need to handle errors
    * explicitly.
    *
-   * @throws `Error.CantDispose` if other references to this context still exist.
+   * This does not consume the `Context` instance. Subsequent use of the same
+   * JS object after release is invalid and may fail with PC/SC errors.
    */
   release(): void {
+    this.ensureValidHandle();
     const r = ffi.raw();
     const result = r.SCardReleaseContext(this.handle);
     if (result !== ffi.SCARD_S_SUCCESS) {
       throw errorFromRaw(result);
     }
+    this.released = true;
   }
 
   /**
@@ -92,6 +93,7 @@ export class Context {
    * @throws An {@link Error} if the context is no longer valid.
    */
   isValid(): void {
+    this.ensureValidHandle();
     const r = ffi.raw();
     checkResult(r.SCardIsValidContext(this.handle));
   }
@@ -107,6 +109,7 @@ export class Context {
    * {@link getStatusChange} call in progress.
    */
   cancel(): void {
+    this.ensureValidHandle();
     const r = ffi.raw();
     checkResult(r.SCardCancel(this.handle));
   }
@@ -125,8 +128,9 @@ export class Context {
    * @throws `Error.InsufficientBuffer` if the buffer is too small.
    */
   listReaders(buffer: Buffer): ReaderNames {
+    this.ensureValidHandle();
     const r = ffi.raw();
-    const buflen = allocUint32(buffer.length);
+    const buflen = allocDword(buffer.length);
 
     const result = r.SCardListReaders(this.handle, null, buffer, buflen);
     if (result === Error.NoReadersAvailable) {
@@ -134,7 +138,7 @@ export class Context {
     }
     checkResult(result);
 
-    const len = readUint32(buflen, 0);
+    const len = readDword(buflen, 0);
     return new ReaderNames(buffer.subarray(0, len));
   }
 
@@ -144,15 +148,16 @@ export class Context {
    * Returns `0` when no readers are available.
    */
   listReadersLen(): number {
+    this.ensureValidHandle();
     const r = ffi.raw();
-    const buflen = allocUint32(0);
+    const buflen = allocDword(0);
 
     const result = r.SCardListReaders(this.handle, null, null, buflen);
     if (result === Error.NoReadersAvailable) {
       return 0;
     }
     checkResult(result);
-    return readUint32(buflen, 0);
+    return readDword(buflen, 0);
   }
 
   /**
@@ -181,17 +186,18 @@ export class Context {
    * @throws `Error.NoSmartcard` if no card is present.
    */
   connect(reader: string, shareMode: ShareMode, preferredProtocols: Protocols): Card {
+    this.ensureValidHandle();
     const r = ffi.raw();
-    const phCard = Buffer.alloc(8);
-    const pdwActiveProtocol = allocUint32(0);
+    const phCard = Buffer.alloc(ffi.SCARDHANDLE_SIZE);
+    const pdwActiveProtocol = allocDword(0);
 
     checkResult(
       r.SCardConnect(this.handle, reader, shareMode, preferredProtocols, phCard, pdwActiveProtocol),
     );
 
-    const cardHandle = ffi.isWindows ? phCard.readBigUInt64LE(0) : phCard.readInt32LE(0);
+    const cardHandle = ffi.readRawCard(phCard);
 
-    const activeProtocol = protocolFromRaw(readUint32(pdwActiveProtocol, 0));
+    const activeProtocol = protocolFromRaw(readDword(pdwActiveProtocol, 0));
 
     return new Card(this, cardHandle, activeProtocol);
   }
@@ -207,8 +213,8 @@ export class Context {
    * stored `currentState`, or the timeout expires. The `ReaderState`
    * objects are updated in-place.
    *
-   * Pass the special reader name `\\?PnP?\Notification` (available via
-   * {@link PNP_NOTIFICATION}) to detect reader insertions and removals.
+   * Pass the special reader name returned by {@link PNP_NOTIFICATION} to
+   * detect reader insertions and removals.
    *
    * Use {@link cancel} from another context to interrupt this call.
    *
@@ -217,6 +223,7 @@ export class Context {
    * @throws `Error.Timeout` on timeout, `Error.Cancelled` if cancelled.
    */
   getStatusChange(timeout: number | null, readers: ReaderState[]): void {
+    this.ensureValidHandle();
     const r = ffi.raw();
     const timeoutMs = timeout === null ? ffi.INFINITE : Math.min(timeout, ffi.INFINITE);
 
@@ -245,6 +252,7 @@ export class Context {
    * Intended for advanced / internal use.
    */
   getRawHandle(): ffi.RawContext {
+    this.ensureValidHandle();
     return this.handle;
   }
 
@@ -252,7 +260,17 @@ export class Context {
    * Releases the context. Called automatically via `using`.
    */
   [Symbol.dispose](): void {
+    if (this.released) {
+      return;
+    }
+    this.released = true;
     ffi.raw().SCardReleaseContext(this.handle);
+  }
+
+  private ensureValidHandle(): void {
+    if (this.released) {
+      throw Error.InvalidHandle;
+    }
   }
 }
 

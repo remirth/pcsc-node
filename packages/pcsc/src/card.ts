@@ -6,11 +6,11 @@
 
 import * as ffi from '@remirth/pcsc-sys';
 
-import { allocUint32, readUint32 } from './buffer.js';
+import { allocDword, readDword } from './buffer.js';
 import type { Context } from './context.js';
-import { Disposition, Protocol, protocolFromRaw } from './enums.js';
+import { Disposition, Protocol, protocolFromRaw, statusFromRaw } from './enums.js';
 import type { Protocols, ShareMode, Status, Attribute } from './enums.js';
-import { Error, checkResult } from './error.js';
+import { Error, checkResult, errorFromRaw } from './error.js';
 import { ReaderNames } from './reader.js';
 import { Transaction } from './transaction.js';
 
@@ -26,14 +26,29 @@ export interface CardStatus {
   /** Current card status flags. */
   status: Status;
 
-  /**
-   * Active communication protocol, or `undefined` for direct
-   * connections (no protocol negotiated).
-   */
-  protocol: Protocol | undefined;
-
   /** The card's current ATR (Answer To Reset). */
   atr: Buffer;
+
+  /** Current protocol, or `undefined` for direct connections. */
+  protocol2(): Protocol | undefined;
+
+  /**
+   * Current protocol.
+   *
+   * Throws when connected directly to a reader without an active protocol.
+   */
+  protocol(): Protocol;
+}
+
+/**
+ * Owned version of {@link CardStatus}.
+ */
+export interface CardStatusOwned {
+  readerNames: string[];
+  status: Status;
+  atr: Buffer;
+  protocol2(): Protocol | undefined;
+  protocol(): Protocol;
 }
 
 /**
@@ -47,6 +62,7 @@ export interface CardStatus {
 export class Card {
   private _context: Context;
   private handle: ffi.RawCard;
+  private disconnected: boolean;
 
   /** The currently active communication protocol (if negotiated). */
   activeProtocol: Protocol | undefined;
@@ -55,6 +71,7 @@ export class Card {
     this._context = context;
     this.handle = handle;
     this.activeProtocol = activeProtocol;
+    this.disconnected = false;
   }
 
   /**
@@ -63,6 +80,7 @@ export class Card {
    * Intended for advanced / internal use.
    */
   getRawHandle(): ffi.RawCard {
+    this.ensureConnected();
     return this.handle;
   }
 
@@ -80,13 +98,24 @@ export class Card {
    *
    * ```ts
    * using tx = card.transaction();
-   * const response = tx.getCard().transmit(apdu, recvBuf);
+   * const response = tx.transmit(apdu, recvBuf);
    * // transaction ends here
    * ```
    */
   transaction(): Transaction {
+    this.ensureConnected();
     const r = ffi.raw();
     checkResult(r.SCardBeginTransaction(this.handle));
+    return new Transaction(this);
+  }
+
+  transaction2(): Transaction {
+    this.ensureConnected();
+    const r = ffi.raw();
+    const result = r.SCardBeginTransaction(this.handle);
+    if (result !== ffi.SCARD_S_SUCCESS) {
+      throw [this, errorFromRaw(result)] as const;
+    }
     return new Transaction(this);
   }
 
@@ -106,8 +135,9 @@ export class Card {
     preferredProtocols: Protocols,
     initialization: Disposition,
   ): void {
+    this.ensureConnected();
     const r = ffi.raw();
-    const pdwActiveProtocol = allocUint32(0);
+    const pdwActiveProtocol = allocDword(0);
 
     checkResult(
       r.SCardReconnect(
@@ -119,7 +149,7 @@ export class Card {
       ),
     );
 
-    this.activeProtocol = protocolFromRaw(readUint32(pdwActiveProtocol, 0));
+    this.activeProtocol = protocolFromRaw(readDword(pdwActiveProtocol, 0));
   }
 
   /**
@@ -136,8 +166,10 @@ export class Card {
    * @param disposition - What to do with the card on disconnect.
    */
   disconnect(disposition: Disposition): void {
+    this.ensureConnected();
     const r = ffi.raw();
     checkResult(r.SCardDisconnect(this.handle, disposition));
+    this.disconnected = true;
   }
 
   /**
@@ -149,28 +181,60 @@ export class Card {
    *
    * @param namesBuffer - Buffer for reader name data.
    * @param atrBuffer - Buffer for ATR data.
-   * @returns A {@link CardStatus} object referencing sub-ranges of the provided buffers.
+   * @deprecated Use {@link status2} or {@link status2Owned} instead.
    */
-  status(namesBuffer: Buffer, atrBuffer: Buffer): CardStatus {
+  status(): { status: Status; protocol: Protocol } {
+    this.ensureConnected();
     const r = ffi.raw();
-    const readerLen = allocUint32(namesBuffer.length);
-    const rawStatus = allocUint32(0);
-    const rawProtocol = allocUint32(0);
-    const atrLen = allocUint32(atrBuffer.length);
+    const rawStatus = allocDword(0);
+    const rawProtocol = allocDword(0);
+
+    checkResult(r.SCardStatus(this.handle, null, null, rawStatus, rawProtocol, null, null));
+
+    const status = statusFromRaw(readDword(rawStatus, 0));
+    const protocol = protocolFromRaw(readDword(rawProtocol, 0));
+    if (protocol === undefined) {
+      throw new TypeError(
+        'pcsc::CardStatus::protocol() does not support direct connections; use status2() instead',
+      );
+    }
+
+    return { status, protocol };
+  }
+
+  /**
+   * Get current card and reader status information.
+   *
+   * Wraps `SCardStatus` with caller-provided buffers, matching upstream
+   * `status2()`.
+   */
+  status2(namesBuffer: Buffer, atrBuffer: Buffer): CardStatus {
+    this.ensureConnected();
+    const r = ffi.raw();
+    const readerLen = allocDword(namesBuffer.length);
+    const rawStatus = allocDword(0);
+    const rawProtocol = allocDword(0);
+    const atrLen = allocDword(atrBuffer.length);
 
     checkResult(
       r.SCardStatus(this.handle, namesBuffer, readerLen, rawStatus, rawProtocol, atrBuffer, atrLen),
     );
 
-    const readerLenVal = readUint32(readerLen, 0);
+    const readerLenVal = readDword(readerLen, 0);
     const names = new ReaderNames(namesBuffer.subarray(0, readerLenVal));
 
-    const status = readUint32(rawStatus, 0) as Status;
-    const protocol = protocolFromRaw(readUint32(rawProtocol, 0));
-    const atrLenVal = readUint32(atrLen, 0);
+    const status = statusFromRaw(readDword(rawStatus, 0));
+    const protocol = protocolFromRaw(readDword(rawProtocol, 0));
+    const atrLenVal = readDword(atrLen, 0);
     const atr = atrBuffer.subarray(0, atrLenVal);
 
-    return { readerNames: names, status, protocol, atr };
+    return {
+      readerNames: names,
+      status,
+      atr,
+      protocol2: () => protocol,
+      protocol: () => requireProtocol(protocol),
+    };
   }
 
   /**
@@ -178,22 +242,42 @@ export class Card {
    *
    * @returns `{ readerLen, atrLen }` in bytes.
    */
-  statusLen(): { readerLen: number; atrLen: number } {
+  status2Len(): { readerLen: number; atrLen: number } {
+    this.ensureConnected();
     const r = ffi.raw();
-    const readerLenBuf = allocUint32(0);
-    const atrLenBuf = allocUint32(0);
+    const readerLenBuf = allocDword(0);
+    const atrLenBuf = allocDword(0);
 
     const result = r.SCardStatus(this.handle, null, readerLenBuf, null, null, null, atrLenBuf);
 
     if (result === Error.InsufficientBuffer) {
       return {
-        readerLen: readUint32(readerLenBuf, 0),
-        atrLen: readUint32(atrLenBuf, 0),
+        readerLen: readDword(readerLenBuf, 0),
+        atrLen: readDword(atrLenBuf, 0),
       };
     }
 
     checkResult(result);
-    return { readerLen: readUint32(readerLenBuf, 0), atrLen: readUint32(atrLenBuf, 0) };
+    return { readerLen: readDword(readerLenBuf, 0), atrLen: readDword(atrLenBuf, 0) };
+  }
+
+  statusLen(): { readerLen: number; atrLen: number } {
+    return this.status2Len();
+  }
+
+  status2Owned(): CardStatusOwned {
+    const { readerLen, atrLen } = this.status2Len();
+    const namesBuffer = Buffer.alloc(readerLen);
+    const atrBuffer = Buffer.alloc(atrLen);
+    const status = this.status2(namesBuffer, atrBuffer);
+    const protocol = status.protocol2();
+    return {
+      readerNames: status.readerNames.collect(),
+      status: status.status,
+      atr: Buffer.from(status.atr),
+      protocol2: () => protocol,
+      protocol: () => requireProtocol(protocol),
+    };
   }
 
   /**
@@ -210,12 +294,13 @@ export class Card {
    * @returns A subarray of `buffer` containing the attribute data.
    */
   getAttribute(attribute: Attribute, buffer: Buffer): Buffer {
+    this.ensureConnected();
     const r = ffi.raw();
-    const attrLen = allocUint32(buffer.length);
+    const attrLen = allocDword(buffer.length);
 
     checkResult(r.SCardGetAttrib(this.handle, attribute, buffer, attrLen));
 
-    const len = readUint32(attrLen, 0);
+    const len = readDword(attrLen, 0);
     return buffer.subarray(0, len);
   }
 
@@ -225,15 +310,16 @@ export class Card {
    * @param attribute - Identifier from the {@link Attribute} enum.
    */
   getAttributeLen(attribute: Attribute): number {
+    this.ensureConnected();
     const r = ffi.raw();
-    const attrLen = allocUint32(0);
+    const attrLen = allocDword(0);
 
     const result = r.SCardGetAttrib(this.handle, attribute, null, attrLen);
     if (result === Error.InsufficientBuffer) {
-      return readUint32(attrLen, 0);
+      return readDword(attrLen, 0);
     }
     checkResult(result);
-    return readUint32(attrLen, 0);
+    return readDword(attrLen, 0);
   }
 
   /**
@@ -258,6 +344,7 @@ export class Card {
    * @param data - The attribute value bytes.
    */
   setAttribute(attribute: Attribute, data: Buffer): void {
+    this.ensureConnected();
     const r = ffi.raw();
     checkResult(r.SCardSetAttrib(this.handle, attribute, data, data.length));
   }
@@ -276,8 +363,9 @@ export class Card {
    * @returns A subarray of `recvBuffer` containing the response data.
    */
   transmit(sendBuffer: Buffer, recvBuffer: Buffer): Buffer {
+    this.ensureConnected();
     const r = ffi.raw();
-    const recvLen = allocUint32(recvBuffer.length);
+    const recvLen = allocDword(recvBuffer.length);
 
     const pciPtr = getPciPointer(this.activeProtocol);
 
@@ -293,7 +381,31 @@ export class Card {
       ),
     );
 
-    const len = readUint32(recvLen, 0);
+    const len = readDword(recvLen, 0);
+    return recvBuffer.subarray(0, len);
+  }
+
+  transmit2(sendBuffer: Buffer, recvBuffer: Buffer): Buffer {
+    this.ensureConnected();
+    const r = ffi.raw();
+    const recvLen = allocDword(recvBuffer.length);
+    const pciPtr = getPciPointer(this.activeProtocol);
+
+    const result = r.SCardTransmit(
+      this.handle,
+      pciPtr,
+      sendBuffer,
+      sendBuffer.length,
+      null,
+      recvBuffer,
+      recvLen,
+    );
+
+    if (result !== ffi.SCARD_S_SUCCESS) {
+      throw [errorFromRaw(result), readDword(recvLen, 0)] as const;
+    }
+
+    const len = readDword(recvLen, 0);
     return recvBuffer.subarray(0, len);
   }
 
@@ -312,8 +424,9 @@ export class Card {
    * @returns A subarray of `recvBuffer` with the returned data.
    */
   control(controlCode: number, sendBuffer: Buffer | null, recvBuffer: Buffer | null): Buffer {
+    this.ensureConnected();
     const r = ffi.raw();
-    const bytesReturned = allocUint32(0);
+    const bytesReturned = allocDword(0);
     const recvLen = recvBuffer ? recvBuffer.length : 0;
 
     checkResult(
@@ -328,7 +441,7 @@ export class Card {
       ),
     );
 
-    const len = readUint32(bytesReturned, 0);
+    const len = readDword(bytesReturned, 0);
     return recvBuffer ? recvBuffer.subarray(0, len) : Buffer.alloc(0);
   }
 
@@ -337,8 +450,18 @@ export class Card {
    * via `using`.
    */
   [Symbol.dispose](): void {
+    if (this.disconnected) {
+      return;
+    }
+    this.disconnected = true;
     void this._context;
     ffi.raw().SCardDisconnect(this.handle, Disposition.ResetCard);
+  }
+
+  private ensureConnected(): void {
+    if (this.disconnected) {
+      throw Error.InvalidHandle;
+    }
   }
 }
 
@@ -354,6 +477,15 @@ function getPciPointer(protocol: Protocol | undefined): bigint {
     case Protocol.RAW:
       return ffi.getRawPci();
     default:
-      return ffi.getT0Pci();
+      throw new TypeError('pcsc::Card::transmit() does not support direct connections');
   }
+}
+
+function requireProtocol(protocol: Protocol | undefined): Protocol {
+  if (protocol === undefined) {
+    throw new TypeError(
+      'pcsc::CardStatus::protocol() does not support direct connections; use protocol2() instead',
+    );
+  }
+  return protocol;
 }

@@ -6,11 +6,15 @@
 
 import { getRawPointer } from '@remirth/pcsc-sys';
 
-import { createReaderStateBuffer, readReaderStateAtr, readUint32, writeUint32 } from './buffer.js';
+import {
+  createReaderStateBuffer,
+  readDword,
+  readReaderStateAtr,
+  RS_OFFSET_DWCURRENTSTATE,
+  RS_OFFSET_DWEVENTSTATE,
+  writeDword,
+} from './buffer.js';
 import type { State } from './enums.js';
-
-const RS_OFFSET_DWEVENTSTATE = 20;
-const RS_OFFSET_DWCURRENTSTATE = 16;
 
 /**
  * Tracks the current state of a card reader.
@@ -56,12 +60,12 @@ export class ReaderState {
 
   /** The last current state that was set. */
   get currentState(): State {
-    return readUint32(this.inner, RS_OFFSET_DWCURRENTSTATE);
+    return readDword(this.inner, RS_OFFSET_DWCURRENTSTATE) & 0x0000_ffff;
   }
 
   /** The last reported state (set after `getStatusChange` returns). */
   get eventState(): State {
-    return readUint32(this.inner, RS_OFFSET_DWEVENTSTATE);
+    return readDword(this.inner, RS_OFFSET_DWEVENTSTATE) & 0x0000_ffff;
   }
 
   /**
@@ -77,8 +81,8 @@ export class ReaderState {
 
   /** Sync the currently-known state to the last reported state. */
   syncCurrentState(): void {
-    const eventState = readUint32(this.inner, RS_OFFSET_DWEVENTSTATE);
-    writeUint32(this.inner, RS_OFFSET_DWCURRENTSTATE, eventState);
+    const eventState = readDword(this.inner, RS_OFFSET_DWEVENTSTATE);
+    writeDword(this.inner, RS_OFFSET_DWCURRENTSTATE, eventState);
   }
 
   /** Returns the raw pointer to the underlying struct buffer. */
@@ -113,31 +117,13 @@ export class ReaderState {
  */
 export class ReaderNames {
   private buf: Buffer;
-  private pos: number;
 
   constructor(buf: Buffer) {
     this.buf = buf;
-    this.pos = 0;
   }
 
   [Symbol.iterator](): Iterator<string> {
-    return this;
-  }
-
-  next(): IteratorResult<string> {
-    if (this.pos >= this.buf.length) {
-      return { done: true, value: undefined };
-    }
-
-    const start = this.pos;
-    let end = this.buf.indexOf(0, start);
-    if (end === -1 || end === start) {
-      this.pos = this.buf.length;
-      return { done: true, value: undefined };
-    }
-
-    this.pos = end + 1;
-    return { done: false, value: this.buf.toString('utf8', start, end) };
+    return new ReaderNamesIterator(this.buf);
   }
 
   /**
@@ -149,5 +135,31 @@ export class ReaderNames {
       result.push(name);
     }
     return result;
+  }
+}
+
+class ReaderNamesIterator implements Iterator<string> {
+  private buf: Buffer;
+  private pos: number;
+
+  constructor(buf: Buffer) {
+    this.buf = buf;
+    this.pos = 0;
+  }
+
+  next(): IteratorResult<string> {
+    if (this.pos >= this.buf.length) {
+      return { done: true, value: undefined };
+    }
+
+    const start = this.pos;
+    const end = this.buf.indexOf(0, start);
+    if (end === -1 || end === start) {
+      this.pos = this.buf.length;
+      return { done: true, value: undefined };
+    }
+
+    this.pos = end + 1;
+    return { done: false, value: this.buf.toString('utf8', start, end) };
   }
 }

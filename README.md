@@ -2,7 +2,7 @@
 
 Node.js bindings to the PC/SC API for smart card communication.
 
-A TypeScript port of the [pcsc-rust](https://github.com/bluetech/pcsc-rust) crate, using the [Node.js 26 experimental FFI](https://nodejs.org/api/ffi.html) (`node:ffi`) to call the native PC/SC C library directly — no native addons or rebuilds required.
+A TypeScript port of the [pcsc-rust](https://github.com/bluetech/pcsc-rust) crate, using either the [Node.js 26 experimental FFI](https://nodejs.org/api/ffi.html) (`node:ffi`) or [Koffi](https://koffi.dev/) to call the native PC/SC C library directly.
 
 ## Packages
 
@@ -22,14 +22,7 @@ A TypeScript port of the [pcsc-rust](https://github.com/bluetech/pcsc-rust) crat
 ## Quick start
 
 ```ts
-import {
-  Context,
-  Scope,
-  ShareMode,
-  Protocols,
-  Error,
-  MAX_BUFFER_SIZE,
-} from "@remirth/pcsc";
+import { Context, Scope, ShareMode, Protocols, Error, MAX_BUFFER_SIZE } from '@remirth/pcsc';
 
 // Establish a PC/SC context
 const ctx = Context.establish(Scope.User);
@@ -37,13 +30,13 @@ const ctx = Context.establish(Scope.User);
 // List available readers
 const readers = ctx.listReadersOwned();
 if (readers.length === 0) {
-  console.log("No readers connected.");
+  console.log('No readers connected.');
   ctx.release();
   process.exit(0);
 }
 
 const reader = readers[0]!;
-console.log("Using reader:", reader);
+console.log('Using reader:', reader);
 
 // Connect to the card
 let card;
@@ -51,33 +44,41 @@ try {
   card = ctx.connect(reader, ShareMode.Shared, Protocols.ANY);
 } catch (err) {
   if (err === Error.NoSmartcard) {
-    console.log("No smart card present.");
+    console.log('No smart card present.');
     ctx.release();
     process.exit(0);
   }
   throw err;
 }
 
+import { Disposition } from '@remirth/pcsc';
+
 // Send an APDU command
 const apdu = Buffer.from([
-  0x00, 0xa4, 0x04, 0x00, 0x0a, 0xa0, 0x00, 0x00, 0x00, 0x62, 0x03, 0x01, 0x0c,
-  0x06, 0x01,
+  0x00, 0xa4, 0x04, 0x00, 0x0a, 0xa0, 0x00, 0x00, 0x00, 0x62, 0x03, 0x01, 0x0c, 0x06, 0x01,
 ]);
 const recvBuf = Buffer.alloc(MAX_BUFFER_SIZE);
 const response = card.transmit(apdu, recvBuf);
-console.log("APDU response:", response);
+console.log('APDU response:', response);
 
-card.disconnect(0);
+card.disconnect(Disposition.LeaveCard);
 ctx.release();
 ```
 
 ## Run
 
-Node.js 26 or later is required. The experimental FFI flag must be enabled:
+Runtime options:
+
+- Node.js 26 or later with `--experimental-ffi`
+- or `koffi` installed in the consumer project
+
+With `node:ffi`:
 
 ```sh
 node --experimental-ffi your-script.js
 ```
+
+Backend selection defaults to `PCSC_FFI_BACKEND=auto`, which prefers `node:ffi` and falls back to `koffi`. You can also force `node-ffi` or `koffi` explicitly.
 
 ## API overview
 
@@ -114,13 +115,13 @@ card.control(code, sendBuf, recvBuf); // Buffer
 card.getAttribute(attr, buf); // Buffer
 card.getAttributeOwned(attr); // Buffer
 card.setAttribute(attr, data);
-card.status(namesBuf, atrBuf); // CardStatus
+card.status2(namesBuf, atrBuf); // CardStatus
 card.reconnect(mode, prot, init);
 card.disconnect(Disposition.LeaveCard);
 
 // Transaction
 using tx = card.transaction();
-tx.getCard().transmit(apdu, recvBuf);
+tx.transmit(apdu, recvBuf);
 // automatically ended with LeaveCard
 ```
 
@@ -133,7 +134,7 @@ const state = new ReaderState(readerName, State.UNAWARE);
 ctx.getStatusChange(null, [state]);
 
 if (state.eventState & State.CHANGED) {
-  console.log("Reader state changed:", state.atr);
+  console.log('Reader state changed:', state.atr);
   state.syncCurrentState();
 }
 ```
@@ -170,20 +171,6 @@ try {
 | `Status`         | const object + type (bitmask) | Card status flags (ABSENT, PRESENT, POWERED, …)        |
 | `Attribute`      | const object + type           | Reader attribute IDs                                   |
 | `AttributeClass` | const object + type           | Attribute category IDs                                 |
-
-## Async wrapper
-
-```ts
-import { ContextAsync, Scope, ShareMode, Protocols } from "@remirth/pcsc";
-
-const ctx = ContextAsync.establish(Scope.User);
-const readers = await ctx.listReadersOwned();
-const card = await ctx.connect(readers[0]!, ShareMode.Shared, Protocols.ANY);
-const response = await card.transmit(apdu, recvBuf);
-await ctx.release();
-```
-
-**Note:** Truly blocking calls (like `getStatusChange`) still block the event loop in the async variant. Offload to a worker thread for non-blocking behaviour.
 
 ## Structuring and building
 

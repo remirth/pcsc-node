@@ -54,7 +54,7 @@ function main(): void {
     readerStates = [];
   }
 
-  readerStates.push(new ReaderState(PNP_NOTIFICATION, State.UNAWARE));
+  readerStates.push(new ReaderState(PNP_NOTIFICATION(), State.UNAWARE));
 
   const abortController = new AbortController();
 

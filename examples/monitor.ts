@@ -1,6 +1,4 @@
-import { Context, Scope, Error, State, ReaderState } from '@remirth/pcsc';
-
-const PNP_NOTIFICATION = '\\\\?PnP?\\Notification';
+import { Context, Scope, Error, State, ReaderState, PNP_NOTIFICATION } from '@remirth/pcsc';
 
 function main(): void {
   const ctx = Context.establish(Scope.User);
@@ -17,7 +15,7 @@ function main(): void {
       readerStates = [];
     }
 
-    readerStates.push(new ReaderState(PNP_NOTIFICATION, State.UNAWARE));
+    readerStates.push(new ReaderState(PNP_NOTIFICATION(), State.UNAWARE));
 
     console.log('Monitoring smart card events. Press Ctrl+C to exit.');
 

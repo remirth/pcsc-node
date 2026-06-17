@@ -1,13 +1,11 @@
-import { Context, Scope, Error, State, ReaderState } from '@remirth/pcsc';
-
-const PNP_NOTIFICATION = '\\\\?PnP?\\Notification';
+import { Context, Scope, Error, State, ReaderState, PNP_NOTIFICATION } from '@remirth/pcsc';
 
 function main(): void {
   const ctx = Context.establish(Scope.User);
 
   try {
     console.log('Entering blocking call; it will timeout in 60 seconds.');
-    const readerStates = [new ReaderState(PNP_NOTIFICATION, State.UNAWARE)];
+    const readerStates = [new ReaderState(PNP_NOTIFICATION(), State.UNAWARE)];
 
     try {
       ctx.getStatusChange(60000, readerStates);

@@ -238,6 +238,46 @@ export function protocolFromRaw(raw: number): Protocol | undefined {
 }
 
 /**
+ * Convert a raw card status `DWORD` to a portable {@link Status} bitmask.
+ *
+ * Windows reports ordinal values here instead of the shared bitflags used by
+ * pcsclite, so the mapping is normalised to the upstream `pcsc-rust` values.
+ */
+export function statusFromRaw(raw: number): Status {
+  if (!ffi.isWindows) {
+    return raw & STATUS_MASK;
+  }
+
+  switch (raw) {
+    case ffi.SCARD_UNKNOWN:
+      return Status.UNKNOWN;
+    case ffi.SCARD_ABSENT:
+      return Status.ABSENT;
+    case ffi.SCARD_PRESENT:
+      return Status.PRESENT;
+    case ffi.SCARD_SWALLOWED:
+      return Status.SWALLOWED;
+    case ffi.SCARD_POWERED:
+      return Status.POWERED;
+    case ffi.SCARD_NEGOTIABLE:
+      return Status.NEGOTIABLE;
+    case ffi.SCARD_SPECIFIC:
+      return Status.SPECIFIC;
+    default:
+      return 0;
+  }
+}
+
+const STATUS_MASK =
+  Status.UNKNOWN |
+  Status.ABSENT |
+  Status.PRESENT |
+  Status.SWALLOWED |
+  Status.POWERED |
+  Status.NEGOTIABLE |
+  Status.SPECIFIC;
+
+/**
  * Test whether a bitmask value contains a specific flag.
  *
  * @param flags - The combined bitmask value.

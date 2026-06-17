@@ -1,0 +1,27 @@
+import { getBackendInfo } from '#pcsc-sys';
+import { Context, Scope, errorMessage, errorFromRaw } from '#pcsc';
+
+function main(): void {
+  try {
+    const backend = getBackendInfo();
+    console.log('Backend:', backend.selected);
+    console.log('Mode:', backend.mode);
+    console.log('node:ffi available:', backend.nodeFfiAvailable);
+    console.log('koffi available:', backend.koffiAvailable);
+
+    using ctx = Context.establish(Scope.User);
+    const readerLen = ctx.listReadersLen();
+    console.log('Reader list buffer length:', readerLen);
+  } catch (error) {
+    if (typeof error === 'number') {
+      const code = errorFromRaw(error);
+      console.error(`PC/SC error: 0x${error.toString(16)} (${errorMessage(code)})`);
+      process.exitCode = 1;
+      return;
+    }
+
+    throw error;
+  }
+}
+
+main();

@@ -1,12 +1,17 @@
 {
   "name": "pcsc-monorepo",
   "private": true,
+  "type": "module",
+  "imports": {
+    "#pcsc": "./packages/pcsc/dist/index.js",
+    "#pcsc-sys": "./packages/pcsc-sys/dist/index.js"
+  },
   "description": "Node.js PC/SC smart card bindings — monorepo",
   "license": "MIT",
   "scripts": {
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
-    "smoke": "pnpm build && pnpm --filter examples smoke",
+    "smoke": "node ./scripts/backend-smoke.ts",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt --write .",

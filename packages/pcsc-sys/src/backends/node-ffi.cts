@@ -1,4 +1,4 @@
-const { buildDefinitions, getLibraryName } = require('./shared.js') as typeof import('./shared.js');
+const { buildDefinitions, getLibraryNames } = require('./shared.js') as typeof import('./shared.js');
 
 type PcscBackend = import('../backend.js').PcscBackend;
 type SCardFunctions = import('../backend.js').SCardFunctions;
@@ -21,6 +21,10 @@ type NodeFfiType =
   | 'string';
 
 interface DynamicLibrary {
+  getFunction(
+    name: string,
+    signature: { parameters: NodeFfiType[]; result: NodeFfiType },
+  ): (...args: unknown[]) => unknown;
   getFunctions(
     definitions: Record<string, { parameters: NodeFfiType[]; result: NodeFfiType }>,
   ): Record<string, (...args: unknown[]) => unknown>;
@@ -38,10 +42,8 @@ interface NodeFfiModule {
 function createNodeFfiBackend(): PcscBackend {
   const ffi = require('node:ffi') as NodeFfiModule;
 
-  const library = new ffi.DynamicLibrary(getLibraryName(ffi.suffix));
-  const functions = library.getFunctions(
-    buildDefinitions() as Record<string, { parameters: NodeFfiType[]; result: NodeFfiType }>,
-  ) as unknown as SCardFunctions;
+  const definitions = buildDefinitions();
+  const { library, functions } = loadLibrary(ffi, definitions);
 
   return {
     name: 'node-ffi',
@@ -51,6 +53,33 @@ function createNodeFfiBackend(): PcscBackend {
     toString: ffi.toString,
     toBuffer: ffi.toBuffer,
   };
+}
+
+function loadLibrary(
+  ffi: NodeFfiModule,
+  definitions: ReturnType<typeof buildDefinitions>,
+): { library: DynamicLibrary; functions: SCardFunctions } {
+  const errors: Error[] = [];
+
+  for (const libraryName of getLibraryNames(ffi.suffix)) {
+    try {
+      const library = new ffi.DynamicLibrary(libraryName);
+      const functions = Object.fromEntries(
+        Object.entries(definitions).map(([name, def]) => [
+          name,
+          library.getFunction(def.symbol, {
+            parameters: def.parameters as NodeFfiType[],
+            result: def.result as NodeFfiType,
+          }),
+        ]),
+      ) as unknown as SCardFunctions;
+      return { library, functions };
+    } catch (error) {
+      errors.push(error as Error);
+    }
+  }
+
+  throw new AggregateError(errors, 'Failed to load PC/SC library with node:ffi');
 }
 
 module.exports = { createNodeFfiBackend };

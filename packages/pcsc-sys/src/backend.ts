@@ -113,14 +113,8 @@ export function getBackend(): PcscBackend {
       throw new Error('PCSC_FFI_BACKEND=koffi was requested, but koffi is unavailable');
     }
     backend = loadKoffiBackend();
-  } else if (availability.nodeFfiAvailable) {
-    backend = loadNodeFfiBackend();
-  } else if (availability.koffiAvailable) {
-    backend = loadKoffiBackend();
   } else {
-    throw new Error(
-      'No supported FFI backend is available. Enable node:ffi with Node.js 26 --experimental-ffi or install koffi.',
-    );
+    backend = loadAutoBackend(availability);
   }
 
   backendInfo = {
@@ -130,6 +124,37 @@ export function getBackend(): PcscBackend {
   };
 
   return backend;
+}
+
+function loadAutoBackend(availability: {
+  nodeFfiAvailable: boolean;
+  koffiAvailable: boolean;
+}): PcscBackend {
+  const errors: Error[] = [];
+
+  if (availability.nodeFfiAvailable) {
+    try {
+      return loadNodeFfiBackend();
+    } catch (error) {
+      errors.push(error as Error);
+    }
+  }
+
+  if (availability.koffiAvailable) {
+    try {
+      return loadKoffiBackend();
+    } catch (error) {
+      errors.push(error as Error);
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new AggregateError(errors, 'No supported FFI backend could be initialized');
+  }
+
+  throw new Error(
+    'No supported FFI backend is available. Enable node:ffi with Node.js 26 --experimental-ffi or install koffi.',
+  );
 }
 
 export function getBackendInfo(): BackendInfo {

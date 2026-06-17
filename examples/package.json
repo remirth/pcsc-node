@@ -3,11 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "smoke": "node dist/backend-smoke.js"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@remirth/pcsc": "workspace:*",
-    "@remirth/pcsc-sys": "workspace:*"
+    "@remirth/pcsc": "workspace:*"
   }
 }

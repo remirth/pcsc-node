@@ -1,4 +1,4 @@
-const { buildDefinitions, getLibraryName } = require('./shared.js') as typeof import('./shared.js');
+const { buildDefinitions, getLibraryNames } = require('./shared.js') as typeof import('./shared.js');
 
 type PcscBackend = import('../backend.js').PcscBackend;
 type SCardFunctions = import('../backend.js').SCardFunctions;
@@ -18,11 +18,8 @@ interface KoffiModule {
 function createKoffiBackend(): PcscBackend {
   const koffi = require('koffi') as KoffiModule;
 
-  const lib = koffi.load(getLibraryName(koffi.extension ?? 'so'));
   const definitions = buildDefinitions();
-  const functions = Object.fromEntries(
-    Object.entries(definitions).map(([name, def]) => [name, lib.func(toPrototype(name, def))]),
-  ) as unknown as SCardFunctions;
+  const { lib, functions } = loadLibrary(koffi, definitions);
 
   return {
     name: 'koffi',
@@ -48,6 +45,27 @@ function createKoffiBackend(): PcscBackend {
       return copy ? Buffer.from(view) : view;
     },
   };
+}
+
+function loadLibrary(
+  koffi: KoffiModule,
+  definitions: ReturnType<typeof buildDefinitions>,
+): { lib: KoffiLib; functions: SCardFunctions } {
+  const errors: Error[] = [];
+
+  for (const libraryName of getLibraryNames(koffi.extension ?? 'so')) {
+    try {
+      const lib = koffi.load(libraryName);
+      const functions = Object.fromEntries(
+        Object.entries(definitions).map(([name, def]) => [name, lib.func(toPrototype(def.symbol, def))]),
+      ) as unknown as SCardFunctions;
+      return { lib, functions };
+    } catch (error) {
+      errors.push(error as Error);
+    }
+  }
+
+  throw new AggregateError(errors, 'Failed to load PC/SC library with koffi');
 }
 
 function toPrototype(name: string, definition: { parameters: string[]; result: string }): string {
